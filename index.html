@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Countersign — control and proof for every AI agent action</title>
+<meta name="description" content="Countersign sits between AI agents and their tools. It applies your rules, asks a human when it matters, masks sensitive data, and signs a receipt anyone can verify.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F5F7FA; --surface:#FFFFFF; --ink:#1D2A44; --ink-2:#4A5872; --line:#D7DCE4; --line-2:#E8ECF1;
+  --allow:#0F7B6C; --allow-bg:#E3F3EF; --hold:#A76A10; --hold-bg:#FBF0DD; --deny:#B23A3A; --deny-bg:#FBE6E4; --focus:#2F6FEB;
+  --sans:"IBM Plex Sans", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  --mono:"IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#11161F; --surface:#18202C; --ink:#E5EAF2; --ink-2:#A8B3C5; --line:#2C3747; --line-2:#222B39;
+    --allow:#45C2AE; --allow-bg:#123A35; --hold:#E8AE4F; --hold-bg:#3A2D14; --deny:#EE7F7F; --deny-bg:#3E1F22; --focus:#7AA7FF;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#11161F; --surface:#18202C; --ink:#E5EAF2; --ink-2:#A8B3C5; --line:#2C3747; --line-2:#222B39;
+  --allow:#45C2AE; --allow-bg:#123A35; --hold:#E8AE4F; --hold-bg:#3A2D14; --deny:#EE7F7F; --deny-bg:#3E1F22; --focus:#7AA7FF;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:17px;line-height:1.55}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--focus);outline-offset:3px}
+.wrap{max-width:1080px;margin:0 auto;padding:0 24px}
+
+nav.top{display:flex;justify-content:space-between;align-items:center;padding:22px 0}
+.logo{font-weight:600;font-size:19px;letter-spacing:-0.01em;text-decoration:none}
+nav.top .links{display:flex;gap:20px;font-size:15px}
+nav.top .links a{text-decoration:none;color:var(--ink-2)}
+nav.top .links a:hover{color:var(--ink)}
+
+.hero{display:grid;gap:40px;align-items:center;padding:40px 0 64px;grid-template-columns:1fr}
+@media (min-width:900px){.hero{grid-template-columns:1.1fr .9fr}}
+.hero h1{font-size:clamp(34px,5.2vw,54px);line-height:1.08;letter-spacing:-0.02em;font-weight:600;margin:0 0 20px;max-width:15ch}
+.hero p.lede{font-size:19px;color:var(--ink-2);max-width:36em;margin:0 0 28px}
+.ctas{display:flex;flex-wrap:wrap;gap:12px}
+.btn{display:inline-block;text-decoration:none;font-size:16px;font-weight:500;padding:11px 18px;border-radius:9px;border:1px solid var(--line);background:var(--surface);cursor:pointer}
+.btn.primary{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+
+/* The receipt: the one bold element */
+.receipt{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:20px 20px 22px;font-size:14px;max-width:440px;justify-self:center;width:100%}
+.receipt .head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:12px}
+.receipt .head strong{font-size:15px}
+.receipt .head span{display:block;color:var(--ink-2);font-size:13px}
+.seal{width:76px;height:76px;flex:none}
+.rows{list-style:none;margin:0;padding:0;border-top:1px dashed var(--line)}
+.rows li{display:grid;grid-template-columns:128px 1fr;gap:10px;padding:8px 0;border-bottom:1px dashed var(--line)}
+.rows .k{color:var(--ink-2)}
+.chip{display:inline-block;font-size:12.5px;font-weight:600;padding:2px 9px;border-radius:999px}
+.chip.allow{background:var(--allow-bg);color:var(--allow)}
+.chip.hold{background:var(--hold-bg);color:var(--hold)}
+.chip.deny{background:var(--deny-bg);color:var(--deny)}
+.sig{font-family:var(--mono);font-size:12px;color:var(--ink-2);margin-top:12px;word-break:break-all}
+
+section.block{padding:56px 0;border-top:1px solid var(--line)}
+section.block h2{font-size:28px;letter-spacing:-0.01em;font-weight:600;margin:0 0 10px}
+section.block > .wrap > p.sub{color:var(--ink-2);max-width:40em;margin:0 0 28px}
+
+.steps{list-style:none;counter-reset:s;margin:0;padding:0;display:grid;gap:20px;grid-template-columns:1fr}
+@media (min-width:820px){.steps{grid-template-columns:repeat(3,1fr)}}
+.steps li{counter-increment:s;padding-top:14px;border-top:2px solid var(--ink)}
+.steps li::before{content:counter(s);display:block;font-weight:600;font-size:15px;color:var(--ink-2);margin-bottom:6px}
+.steps h3{margin:0 0 6px;font-size:18px;font-weight:600}
+.steps p{margin:0;color:var(--ink-2);font-size:16px}
+.steps code{font-family:var(--mono);font-size:13.5px;background:var(--surface);border:1px solid var(--line-2);border-radius:5px;padding:1px 5px}
+
+.grid2{display:grid;gap:28px 40px;grid-template-columns:1fr}
+@media (min-width:820px){.grid2{grid-template-columns:1fr 1fr}}
+.grid2 h3{margin:0 0 4px;font-size:18px;font-weight:600}
+.grid2 p{margin:0;color:var(--ink-2);font-size:16px}
+
+.who{display:grid;gap:16px;grid-template-columns:1fr}
+@media (min-width:820px){.who{grid-template-columns:repeat(3,1fr)}}
+.who div{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px}
+.who h3{margin:0 0 6px;font-size:17px;font-weight:600}
+.who p{margin:0;color:var(--ink-2);font-size:15.5px}
+
+.partner{display:grid;gap:32px;grid-template-columns:1fr}
+@media (min-width:900px){.partner{grid-template-columns:1fr 1fr}}
+.partner ul{margin:0;padding-left:20px;color:var(--ink-2)}
+.partner li{margin:4px 0}
+form.signup{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:20px;display:grid;gap:12px}
+form.signup label{display:grid;gap:4px;font-size:14.5px;font-weight:500}
+form.signup input,form.signup textarea{font:inherit;font-size:16px;color:var(--ink);background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:9px 11px}
+form.signup textarea{min-height:84px;resize:vertical}
+.formnote{font-size:13.5px;color:var(--ink-2);margin:0}
+.status{font-size:15px;margin:0}
+.status.ok{color:var(--allow)}
+.status.err{color:var(--deny)}
+
+.founder{max-width:44em}
+.founder p{color:var(--ink-2)}
+
+footer{border-top:1px solid var(--line);padding:28px 0 40px;color:var(--ink-2);font-size:14px}
+footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav class="top" aria-label="Main">
+    <a class="logo" href="#top">Countersign</a>
+    <div class="links">
+      <a href="#how">How it works</a>
+      <a id="navDemo" href="#">Demo</a>
+      <a href="#partners">Design partners</a>
+    </div>
+  </nav>
+
+  <header class="hero" id="top">
+    <div>
+      <h1>Every AI agent action, checked before it runs and proven after.</h1>
+      <p class="lede">Change one URL and Countersign sits between your agents and their tools. It applies your rules, asks a person when it matters, masks sensitive data, and signs a receipt anyone can verify.</p>
+      <div class="ctas">
+        <a class="btn primary" id="heroDemo" href="#">Try the interactive demo</a>
+        <a class="btn" href="#partners">Become a design partner</a>
+      </div>
+    </div>
+
+    <aside class="receipt" aria-label="Example receipt for a held payment">
+      <div class="head">
+        <div><strong>Receipt #1842</strong><span>support-ops v3.2, acting for sam@acme.example</span></div>
+        <svg class="seal" viewBox="0 0 100 100" role="img" aria-label="Signature valid">
+          <circle cx="50" cy="50" r="44" fill="none" stroke="var(--allow)" stroke-width="3"/>
+          <circle cx="50" cy="50" r="36" fill="none" stroke="var(--allow)" stroke-width="1" stroke-dasharray="2 3"/>
+          <path d="M33 51 L45 63 L68 38" fill="none" stroke="var(--allow)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <ul class="rows">
+        <li><span class="k">Tool</span><span>payments.create_transfer</span></li>
+        <li><span class="k">Action</span><span>Domestic payment, $900.00 to Acme Steel</span></li>
+        <li><span class="k">Rules applied</span><span>Payments over $500 need a mandate and a passkey check</span></li>
+        <li><span class="k">Human check</span><span><span class="chip hold">Passkey confirmed</span></span></li>
+        <li><span class="k">Decision</span><span><span class="chip allow">Allowed</span></span></li>
+        <li><span class="k">Previous receipt</span><span>sha256:9f1c…a07e</span></li>
+      </ul>
+      <p class="sig">ed25519: Zm9vYmFyLXNpZ25hdHVyZS1leGFtcGxlLW9ubHk…</p>
+    </aside>
+  </header>
+</div>
+
+<section class="block" id="how">
+  <div class="wrap">
+    <h2>How it works</h2>
+    <p class="sub">No changes to your agent's code. Countersign speaks MCP, so any agent that uses tools through MCP works with it.</p>
+    <ol class="steps">
+      <li><h3>Point your agent at Countersign</h3><p>Replace your MCP server URL with <code>acme.dp.countersign.dev/crm</code>. Your agent only sees the tools it's allowed to use.</p></li>
+      <li><h3>Your rules decide every call</h3><p>Who the agent is, who it acts for, and what it's trying to do are checked against your rules in milliseconds. Risky calls wait for a person; dangerous ones are blocked with a reason the agent understands.</p></li>
+      <li><h3>Every call gets a signed receipt</h3><p>Each decision is recorded in a chain of signed receipts. Your security team, a customer or an auditor can verify them with a public key, without trusting us.</p></li>
+    </ol>
+  </div>
+</section>
+
+<section class="block">
+  <div class="wrap">
+    <h2>What you get</h2>
+    <p class="sub">Start in observe mode to see what your agents do, then turn on enforcement one rule at a time.</p>
+    <div class="grid2">
+      <div><h3>Rules for every action</h3><p>Allow, block, limit or require approval by agent role, tool, data type, amount, time and environment. Ready-made rule packs for production safety and personal data.</p></div>
+      <div><h3>Approvals where people already work</h3><p>Risky actions go to Slack or email with everything the approver needs. Approvals are tied to the exact request, so nothing can change after someone says yes.</p></div>
+      <div><h3>Sensitive data stays protected</h3><p>Card numbers, government IDs and personal details are masked in arguments and results. Data read from customers can't be sent outside the company by a hijacked agent.</p></div>
+      <div><h3>Proof that stands on its own</h3><p>Signed, chained receipts and a decision explainer show exactly why each call was allowed, held or blocked. Export evidence for security reviews and audits.</p></div>
+      <div><h3>Run agents like production software</h3><p>A live timeline, alerts when error or denial rates change, and a kill switch that stops an agent in seconds.</p></div>
+      <div><h3>Your data, your cloud</h3><p>The proxy is open source and can run in your own cloud, so payloads never leave your network. We store decisions and receipts, not your data.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="block">
+  <div class="wrap">
+    <h2>Built for teams whose agents take real actions</h2>
+    <p class="sub">If your agents change records, send messages, move money or touch infrastructure, this is for you.</p>
+    <div class="who">
+      <div><h3>Agent startups selling to enterprises</h3><p>Answer the security review with evidence instead of promises, and close deals faster.</p></div>
+      <div><h3>Platform teams</h3><p>One control point for every agent your company runs, whichever framework or vendor built it.</p></div>
+      <div><h3>Regulated companies</h3><p>Banks, insurers and healthcare teams that need human oversight, data residency and audit trails for AI.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="block" id="partners">
+  <div class="wrap">
+    <h2>Become a design partner</h2>
+    <p class="sub">We're working with a small group of teams running agents in production.</p>
+    <div class="partner">
+      <div>
+        <ul>
+          <li>Free for three months, then founding-customer pricing</li>
+          <li>Start in observe mode: nothing is blocked until you choose</li>
+          <li>Connected in under a day, with our help</li>
+          <li>A weekly 30-minute call where your feedback shapes the product</li>
+          <li>We never store your payloads; you can leave and take your data at any time</li>
+        </ul>
+      </div>
+      <form class="signup" id="signup" novalidate>
+        <label>Name<input name="name" autocomplete="name" required></label>
+        <label>Work email<input name="email" type="email" autocomplete="email" required></label>
+        <label>Company<input name="company" autocomplete="organization"></label>
+        <label>What do your agents do today?<textarea name="agents" placeholder="For example: a support agent that updates orders and issues refunds"></textarea></label>
+        <button class="btn primary" type="submit">Request a spot</button>
+        <p class="status" id="status" role="status"></p>
+        <p class="formnote" id="formnote"></p>
+      </form>
+    </div>
+  </div>
+</section>
+
+<section class="block">
+  <div class="wrap founder">
+    <h2>Why we're building this</h2>
+    <p>[Founder name] has spent 20 years building systems that decide who may do what and prove it afterwards: identity at national scale at UIDAI, and a policy, consent and metering platform for telecom APIs. AI agents are a new kind of user calling APIs, with the same needs at a much larger scale.</p>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <span>Countersign (working name). In private beta.</span>
+    <span><a id="mailLink" href="#">Contact</a></span>
+  </div>
+</footer>
+
+<script>
+(() => {
+  // ---- Settings: edit these when you host the page yourself ----
+  const CONTACT_EMAIL = "founder@example.com";   // replace with your address
+  const DEMO_URL = "/demo"; // the demo page deployed alongside this one
+  const FORM_ENDPOINT = "";                       // when self-hosting: a form service URL that accepts JSON POSTs (for example Formspree)
+  // ---------------------------------------------------------------
+
+  const $ = (id) => document.getElementById(id);
+  ["navDemo","heroDemo"].forEach(id => { const a = $(id); a.href = DEMO_URL; a.target = "_blank"; a.rel = "noopener"; });
+  $("mailLink").href = "mailto:" + CONTACT_EMAIL;
+  $("mailLink").textContent = CONTACT_EMAIL;
+  $("formnote").textContent = FORM_ENDPOINT
+    ? "We'll reply within two working days."
+    : "This opens an email to " + CONTACT_EMAIL + " with your details filled in.";
+
+  $("signup").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const f = e.target, status = $("status");
+    const data = Object.fromEntries(new FormData(f).entries());
+    if (!data.name || !data.email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(data.email)){
+      status.className = "status err"; status.textContent = "Add your name and a valid work email."; return;
+    }
+    if (FORM_ENDPOINT){
+      try {
+        const r = await fetch(FORM_ENDPOINT, { method: "POST", headers: { "Content-Type": "application/json", "Accept": "application/json" }, body: JSON.stringify(data) });
+        if (!r.ok) throw new Error(String(r.status));
+        status.className = "status ok"; status.textContent = "Request sent. We'll reply within two working days."; f.reset();
+      } catch (err) {
+        status.className = "status err"; status.textContent = "Couldn't send. Email " + CONTACT_EMAIL + " instead.";
+      }
+    } else {
+      const body = "Name: " + data.name + "\nEmail: " + data.email + "\nCompany: " + (data.company || "") + "\nAgents: " + (data.agents || "");
+      window.location.href = "mailto:" + CONTACT_EMAIL + "?subject=" + encodeURIComponent("Design partner request") + "&body=" + encodeURIComponent(body);
+      status.className = "status ok"; status.textContent = "Your email app should open with the details filled in.";
+    }
+  });
+})();
+</script>
+</body>
+</html>

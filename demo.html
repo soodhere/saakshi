@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Countersign — interactive demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F5F7FA; --surface:#FFFFFF; --ink:#1D2A44; --ink-2:#4A5872; --line:#D7DCE4; --line-2:#E8ECF1;
+  --allow:#0F7B6C; --allow-bg:#E3F3EF; --hold:#A76A10; --hold-bg:#FBF0DD; --deny:#B23A3A; --deny-bg:#FBE6E4;
+  --na:#6B778C; --na-bg:#EEF1F5; --focus:#2F6FEB; --slack:#4A154B;
+  --sans:"IBM Plex Sans", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  --mono:"IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#11161F; --surface:#18202C; --ink:#E5EAF2; --ink-2:#A8B3C5; --line:#2C3747; --line-2:#222B39;
+    --allow:#45C2AE; --allow-bg:#123A35; --hold:#E8AE4F; --hold-bg:#3A2D14; --deny:#EE7F7F; --deny-bg:#3E1F22;
+    --na:#94A0B4; --na-bg:#232C3A; --focus:#7AA7FF; --slack:#C49BD0;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#11161F; --surface:#18202C; --ink:#E5EAF2; --ink-2:#A8B3C5; --line:#2C3747; --line-2:#222B39;
+  --allow:#45C2AE; --allow-bg:#123A35; --hold:#E8AE4F; --hold-bg:#3A2D14; --deny:#EE7F7F; --deny-bg:#3E1F22;
+  --na:#94A0B4; --na-bg:#232C3A; --focus:#7AA7FF; --slack:#C49BD0;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+
+header.top{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;padding:20px 24px 16px;border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.brand h1{margin:0;font-size:22px;font-weight:600;letter-spacing:-0.01em}
+.brand p{margin:0;color:var(--ink-2);font-size:14px}
+.mode{display:flex;align-items:center;gap:10px;font-size:14px;color:var(--ink-2)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--surface)}
+.seg button{border:0;background:transparent;padding:6px 12px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+
+.intro{max-width:760px;padding:16px 24px 0;color:var(--ink-2);font-size:14px}
+.intro strong{color:var(--ink);font-weight:500}
+
+main{display:grid;gap:20px;padding:20px 24px 32px;grid-template-columns:1fr}
+@media (min-width:820px){main{grid-template-columns:1fr 1fr}.col-receipts{grid-column:1 / -1}}
+@media (min-width:1240px){main{grid-template-columns:1.05fr 1fr 1fr}.col-receipts{grid-column:auto}}
+
+section.col{min-width:0}
+section.col > h2{font-size:15px;font-weight:600;margin:0 0 10px;display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+section.col > h2 span{font-weight:400;color:var(--ink-2);font-size:13px}
+
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px}
+
+/* Agent column */
+.scenarios{display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
+.scenario{display:flex;justify-content:space-between;align-items:center;gap:10px;text-align:left;width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--surface);cursor:pointer}
+.scenario:hover{border-color:var(--ink-2)}
+.scenario small{display:block;color:var(--ink-2);font-size:12.5px}
+.scenario .go{flex:none;font-size:13px;font-weight:500;color:var(--ink-2)}
+.transcript{padding:4px 14px 14px;max-height:620px;overflow:auto}
+.empty{color:var(--ink-2);font-size:14px;padding:16px 2px}
+.turn{padding:12px 0;border-bottom:1px solid var(--line-2)}
+.turn:last-child{border-bottom:0}
+.who{font-size:12.5px;color:var(--ink-2);margin-bottom:4px}
+.say{margin:0 0 8px}
+.call{font-family:var(--mono);font-size:12.5px;background:var(--paper);border:1px solid var(--line-2);border-radius:6px;padding:8px 10px;overflow-x:auto;white-space:pre}
+.result{margin-top:8px;font-size:14px;border-left:3px solid var(--na);padding:6px 10px;background:var(--na-bg);border-radius:0 6px 6px 0}
+.result.allow{border-color:var(--allow);background:var(--allow-bg)}
+.result.deny{border-color:var(--deny);background:var(--deny-bg)}
+.result.hold{border-color:var(--hold);background:var(--hold-bg)}
+.result code{font-family:var(--mono);font-size:12.5px}
+.result pre{font-family:var(--mono);font-size:12px;margin:6px 0 0;white-space:pre-wrap}
+.explain-link{margin-top:6px;background:none;border:0;padding:0;color:var(--focus);cursor:pointer;font-size:13.5px;text-decoration:underline;text-underline-offset:2px}
+
+.approval{margin-top:10px;border:1px solid var(--line);border-left:4px solid var(--slack);border-radius:8px;padding:10px 12px;background:var(--surface)}
+.approval .src{font-size:12.5px;color:var(--slack);font-weight:500;margin-bottom:4px}
+.approval p{margin:4px 0}
+.approval dl{display:grid;grid-template-columns:auto 1fr;gap:2px 12px;margin:8px 0;font-size:13.5px}
+.approval dt{color:var(--ink-2)}
+.approval dd{margin:0}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:7px;padding:6px 12px;cursor:pointer;font-size:14px}
+.btn.primary{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.btn.danger{color:var(--deny);border-color:var(--deny)}
+.btn:disabled{opacity:.5;cursor:default}
+
+/* Decision column */
+.decision{padding:14px}
+.verdict{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px}
+.chip{display:inline-block;font-size:12.5px;font-weight:600;padding:2px 9px;border-radius:999px;background:var(--na-bg);color:var(--na)}
+.chip.allow{background:var(--allow-bg);color:var(--allow)}
+.chip.deny{background:var(--deny-bg);color:var(--deny)}
+.chip.hold{background:var(--hold-bg);color:var(--hold)}
+.decision h3{font-size:15px;margin:0;font-weight:600}
+.msg{margin:6px 0 14px;color:var(--ink-2);font-size:14px}
+.layers{list-style:none;margin:0 0 16px;padding:0;border-top:1px solid var(--line-2)}
+.layers li{display:grid;grid-template-columns:132px 1fr;gap:10px;padding:9px 0;border-bottom:1px solid var(--line-2);font-size:14px}
+.layers .lname{color:var(--ink-2)}
+.layers .lbody p{margin:3px 0 0;font-size:13.5px}
+.layers .pid{font-family:var(--mono);font-size:12px;color:var(--ink-2)}
+h4{font-size:13.5px;font-weight:600;margin:14px 0 6px}
+table.attrs{width:100%;border-collapse:collapse;font-size:13px}
+.attrs-wrap{overflow-x:auto}
+table.attrs th{text-align:left;font-weight:500;color:var(--ink-2);padding:4px 8px 4px 0;border-bottom:1px solid var(--line)}
+table.attrs td{padding:5px 8px 5px 0;border-bottom:1px solid var(--line-2);vertical-align:top}
+table.attrs td:first-child{font-family:var(--mono);font-size:12px}
+.trust{font-size:12px;color:var(--ink-2)}
+.obls{margin:0;padding-left:18px;font-size:13.5px}
+
+/* Receipts column */
+.receipts{padding:14px}
+.keyline{font-size:13px;color:var(--ink-2);margin:0 0 12px}
+.keyline code{font-family:var(--mono);font-size:12px;color:var(--ink)}
+.chain{list-style:none;margin:0 0 14px;padding:0;display:flex;flex-direction:column;gap:6px;max-height:210px;overflow:auto}
+.chain button{width:100%;display:grid;grid-template-columns:34px 1fr auto;gap:8px;align-items:center;text-align:left;border:1px solid var(--line-2);border-radius:7px;background:var(--surface);padding:6px 8px;cursor:pointer;font-size:13.5px}
+.chain button[aria-current="true"]{border-color:var(--ink)}
+.chain .seq{font-family:var(--mono);font-size:12px;color:var(--ink-2)}
+.chain .hash{font-family:var(--mono);font-size:11.5px;color:var(--ink-2)}
+.seal-row{display:flex;gap:14px;align-items:center;margin:8px 0 10px}
+.seal{flex:none;width:92px;height:92px}
+.seal svg{width:100%;height:100%;display:block}
+.seal .ring{transition:stroke .3s ease}
+.seal.broken .crack{stroke-dashoffset:0}
+.seal .crack{stroke-dasharray:120;stroke-dashoffset:120;transition:stroke-dashoffset .5s ease}
+@media (prefers-reduced-motion: reduce){.seal .crack,.seal .ring{transition:none}}
+.checks{list-style:none;padding:0;margin:0;font-size:13.5px}
+.checks li{padding:2px 0}
+.checks .ok{color:var(--allow)}
+.checks .bad{color:var(--deny)}
+textarea.rjson{width:100%;min-height:260px;resize:vertical;font-family:var(--mono);font-size:11.5px;line-height:1.45;color:var(--ink);background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:10px}
+.hint{font-size:13px;color:var(--ink-2);margin:6px 0 0}
+
+footer{padding:0 24px 28px;color:var(--ink-2);font-size:13px;max-width:880px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="brand">
+    <h1>Countersign</h1>
+    <p>Control and proof for every AI agent action</p>
+  </div>
+  <div class="mode" role="group" aria-label="Enforcement mode">
+    <span id="modeLabel">Mode</span>
+    <div class="seg">
+      <button type="button" id="mObserve" aria-pressed="false">Observe</button>
+      <button type="button" id="mEnforce" aria-pressed="true">Enforce</button>
+    </div>
+  </div>
+</header>
+
+<p class="intro"><strong>Try it:</strong> pick something for the support-ops agent to do. Every tool call goes through the mediator, which decides, explains its decision, and writes a receipt signed in your browser. Change one character in a receipt and verification fails.</p>
+
+<main>
+  <section class="col" aria-labelledby="hAgent">
+    <h2 id="hAgent">Agent <span>support-ops v3.2, acting for sam@acme.example</span></h2>
+    <div class="scenarios" id="scenarios"></div>
+    <div class="panel transcript" id="transcript" aria-live="polite">
+      <p class="empty">No calls yet. Pick a task above.</p>
+    </div>
+  </section>
+
+  <section class="col" aria-labelledby="hDecision">
+    <h2 id="hDecision">Decision <span id="decisionFor"></span></h2>
+    <div class="panel decision" id="decision">
+      <p class="empty">Each call is checked layer by layer: platform rules, company guardrails, the tool provider's rules, the agent's role, and the person's mandate. The details appear here.</p>
+    </div>
+  </section>
+
+  <section class="col col-receipts" aria-labelledby="hReceipts">
+    <h2 id="hReceipts">Receipts <span id="chainCount">0 in chain</span></h2>
+    <div class="panel receipts" id="receipts">
+      <p class="keyline" id="keyline">Generating a signing key…</p>
+      <ul class="chain" id="chain"></ul>
+      <div id="receiptView"><p class="empty">Receipts appear here as the agent acts.</p></div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  This is an interactive demo: the agent and its tools are simulated, and the policy logic follows the product's design. Receipts are canonical JSON, hashed with SHA-256, chained to the previous receipt, and signed with a key generated in this browser, so verification here is real.
+</footer>
+
+<script>
+(() => {
+  "use strict";
+
+  // ---------- helpers ----------
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s).replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+  const enc = new TextEncoder();
+  const toHex = (buf) => Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,"0")).join("");
+  const toB64 = (buf) => { let s=""; new Uint8Array(buf).forEach(b => s += String.fromCharCode(b)); return btoa(s); };
+  const fromB64 = (b64) => Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+  const money = (minor) => "$" + (minor/100).toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2});
+  const ulid = (p) => p + "_" + Date.now().toString(36).toUpperCase() + Math.random().toString(36).slice(2,6).toUpperCase();
+
+  function canon(v){
+    if (Array.isArray(v)) return "[" + v.map(canon).join(",") + "]";
+    if (v && typeof v === "object") return "{" + Object.keys(v).sort().map(k => JSON.stringify(k) + ":" + canon(v[k])).join(",") + "}";
+    return JSON.stringify(v);
+  }
+  async function sha256Hex(str){ return toHex(await crypto.subtle.digest("SHA-256", enc.encode(str))); }
+
+  // ---------- state ----------
+  const state = {
+    mode: "enforce",
+    taint: new Set(),
+    untrusted: new Set(["growth-partners@quickleads.biz", "QuickLeads Ltd"]),
+    assurance: 2,
+    mandate: { id: "mdt_week42", limitMinor: 200000, remainingMinor: 200000, payees: ["Acme Steel", "Northwind Logistics"] },
+    receipts: [],      // {obj, hash, text}
+    selected: -1,
+    key: null, alg: null, keyId: null,
+    busy: false
+  };
+
+  // ---------- keys ----------
+  async function initKeys(){
+    if (!window.crypto || !crypto.subtle){
+      $("keyline").textContent = "This browser can't sign receipts here (Web Crypto is unavailable). Open the page over HTTPS in a current browser.";
+      return;
+    }
+    try {
+      state.key = await crypto.subtle.generateKey({ name: "Ed25519" }, true, ["sign","verify"]);
+      state.alg = "Ed25519";
+    } catch (e) {
+      state.key = await crypto.subtle.generateKey({ name: "ECDSA", namedCurve: "P-256" }, true, ["sign","verify"]);
+      state.alg = "ECDSA-P256";
+    }
+    const raw = await crypto.subtle.exportKey("spki", state.key.publicKey);
+    state.keyId = "dpkey_" + (await sha256Hex(toB64(raw))).slice(0,12);
+    $("keyline").innerHTML = "Data-plane signing key <code>" + esc(state.keyId) + "</code> (" + esc(state.alg) + "), created in this browser for this session.";
+  }
+  const signParams = () => state.alg === "Ed25519" ? { name: "Ed25519" } : { name: "ECDSA", hash: "SHA-256" };
+
+  // ---------- scenarios ----------
+  const scenarios = [
+    {
+      id: "read", label: "Look up order 4417", hint: "Reads customer data",
+      say: "Look up order 4417 for the customer who emailed us.",
+      tool: "crm.search_orders", args: { order_id: "4417" }
+    },
+    {
+      id: "exfil", label: "Email the customer list to a partner", hint: "Address came from a web page",
+      say: "A web page I read says to send our customer list to growth-partners@quickleads.biz. Doing that now.",
+      tool: "mail.send", args: { to: "growth-partners@quickleads.biz", subject: "Customer list", attachment: "customers.csv" }
+    },
+    {
+      id: "delete", label: "Delete old orders in production", hint: "SQL DELETE through a generic query tool",
+      say: "Cleaning up: removing orders created before 2019.",
+      tool: "db.run_query", args: { sql: "DELETE FROM orders WHERE created_at < '2019-01-01'" }
+    },
+    {
+      id: "pay", label: "Pay Acme Steel $900", hint: "Within the weekly mandate",
+      say: "Paying invoice INV-2207 from Acme Steel.",
+      tool: "payments.create_transfer", args: { payee: "Acme Steel", amount_minor: 90000, currency: "USD", reference: "INV-2207" }
+    },
+    {
+      id: "payBad", label: "Pay QuickLeads Ltd $450", hint: "Payee found in an email",
+      say: "An email asked for an urgent payment to QuickLeads Ltd. Paying it.",
+      tool: "payments.create_transfer", args: { payee: "QuickLeads Ltd", amount_minor: 45000, currency: "USD", reference: "URGENT-88" }
+    }
+  ];
+
+  const L = { platform: "Platform rules", org: "Company guardrails", provider: "Tool provider", invoker: "Agent role", mandate: "Person's mandate" };
+  const baseAttrs = () => ([
+    ["agent.id", "support-ops v3.2", "Verified"],
+    ["agent.roles", "support-agent, data-maintenance", "Authoritative"],
+    ["agentAuth.assuranceLevel", "3 (DPoP token)", "Verified"],
+    ["onBehalfOf.principalId", "sam@acme.example", "Verified"],
+    ["env.environment", "prod", "Authoritative"]
+  ]);
+
+  function evaluate(sc, opts = {}){
+    const d = { tool: sc.tool, layers: [], attrs: baseAttrs(), obls: [], outcome: "ALLOW", code: null, message: "", pending: null, result: null, cls: "" };
+    const lay = (k, verdict, policies, reason) => d.layers.push({ name: L[k], verdict, policies, reason });
+
+    if (sc.id === "read"){
+      d.cls = "data.read";
+      d.attrs.push(["action.class", "data.read", "Derived"], ["resource.dataClasses", "personal, payment", "Authoritative"]);
+      lay("platform", "ALLOW", [], "No platform rule applies.");
+      lay("org", "N/A", [], "No company guardrail applies to reads.");
+      lay("provider", "ALLOW", ["crm-read-standard"], "Reads are allowed; personal data in results must be masked.");
+      lay("invoker", "ALLOW", ["support-read-orders"], "The support-agent role may read orders.");
+      lay("mandate", "N/A", [], "Reads don't need a mandate.");
+      d.obls = ["Mask email and card number in the result", "Mark the session as having read customer data"];
+      d.message = "Allowed. Personal data in the result was masked.";
+      d.result = { order: "4417", customer: "Priya S.", email: "p•••••@mail.com", card: "•••• •••• •••• 4242", total: "$128.40", status: "shipped" };
+    }
+
+    if (sc.id === "exfil"){
+      d.cls = "comms.send.external";
+      const tainted = state.taint.has("customer_pii");
+      d.attrs.push(["action.class", "comms.send.external", "Derived"], ["request.recipientDomain", "quickleads.biz", "Derived"],
+        ["request.argFromUntrusted", "true (address first seen in web content)", "Detected"],
+        ["session.taint", tainted ? "customer_pii" : "none", "Derived"]);
+      lay("platform", "ALLOW", [], "No platform rule applies.");
+      lay("org", "ALLOW", [], "External email is allowed in general.");
+      lay("provider", "ALLOW", ["mail-standard"], "The mail tool accepts the request.");
+      const pols = ["no-injected-recipients"]; if (tainted) pols.unshift("support-no-pii-email");
+      lay("invoker", "DENY", pols, tainted
+        ? "Customer data was read earlier in this session, and the recipient first appeared in untrusted web content."
+        : "The recipient first appeared in untrusted web content.");
+      lay("mandate", "N/A", [], "Not evaluated: an earlier layer denied.");
+      d.outcome = "DENY"; d.code = tainted ? "tainted_session" : "policy_deny";
+      d.message = tainted
+        ? "Blocked: customer data was read in this session, so it can't be sent outside the company, and the address came from untrusted content."
+        : "Blocked: the recipient address came from untrusted web content.";
+    }
+
+    if (sc.id === "delete"){
+      d.cls = "data.delete.hard";
+      d.attrs.push(["action.class", "data.delete.hard (SQL DELETE parsed)", "Derived"], ["action.reversibility", "irreversible", "Authoritative"], ["request.recordCount", "about 3,400 (estimated)", "Derived"]);
+      lay("platform", "ALLOW", [], "No platform rule applies.");
+      lay("org", "HOLD", ["org-prod-delete-approval"], "Hard deletes in production need approval from platform on-call.");
+      lay("provider", "ALLOW", ["db-maintenance"], "The database tool allows maintenance queries.");
+      lay("invoker", "ALLOW", ["data-maintenance-delete"], "The data-maintenance role may delete records.");
+      lay("mandate", "N/A", [], "Not required for internal maintenance.");
+      d.obls = ["Require approval from platform-oncall within 15 minutes; deny on timeout", "Approval is bound to this exact query"];
+      if (opts.approval === "approved"){
+        d.layers[1] = { name: L.org, verdict: "ALLOW", policies: ["org-prod-delete-approval"], reason: "Approved by alex@acme.example (platform-oncall). Re-checked with fresh context before running." };
+        d.message = "Allowed after approval. The query ran.";
+        d.result = { rows_deleted: 3412 };
+      } else if (opts.approval === "rejected"){
+        d.layers[1] = { name: L.org, verdict: "DENY", policies: ["org-prod-delete-approval"], reason: "Rejected by alex@acme.example (platform-oncall)." };
+        d.outcome = "DENY"; d.code = "approval_rejected"; d.message = "Blocked: the approver rejected the delete.";
+      } else {
+        d.outcome = "HOLD"; d.code = "approval_pending"; d.message = "Waiting for approval in Slack.";
+        d.pending = "approval";
+      }
+    }
+
+    if (sc.id === "pay"){
+      d.cls = "money.pay.domestic";
+      const m = state.mandate, amt = sc.args.amount_minor;
+      const assurance = opts.stepUp === "done" ? 3 : state.assurance;
+      d.attrs.push(["action.class", "money.pay.domestic", "Derived"], ["request.amountMinor", money(amt), "Derived"],
+        ["mandate.payeeAllowed", "true (saved payee)", "Verified"], ["mandate.amountRemainingMinor", money(m.remainingMinor), "Verified"],
+        ["onBehalfOf.assuranceLevel", String(assurance) + (opts.stepUp === "done" ? " (passkey just now)" : " (signed in 3 hours ago)"), "Verified"]);
+      lay("platform", "ALLOW", [], "No platform rule applies.");
+      lay("org", "ALLOW", [], "Payments are allowed for this agent's project.");
+      if (amt > m.remainingMinor){
+        lay("provider", "ALLOW", ["payments-standard"], "The payment tool accepts the request.");
+        lay("invoker", "ALLOW", ["finance-payments"], "The role may make payments.");
+        lay("mandate", "DENY", [m.id], "The amount is more than what's left on the mandate.");
+        d.outcome = "DENY"; d.code = "mandate_limit"; d.message = "Blocked: the mandate doesn't have enough left this week.";
+      } else if (assurance < 3){
+        lay("provider", "HOLD", ["payments-high-value"], "Payments over $500.00 need a mandate and a fresh identity check (assurance level 3).");
+        lay("invoker", "ALLOW", ["finance-payments"], "The role may make payments.");
+        lay("mandate", "ALLOW", [m.id], "Saved payee, within the weekly limit of " + money(m.limitMinor) + ".");
+        d.obls = ["Step-up: confirm with a passkey", "Decrease the mandate's remaining amount on success"];
+        d.outcome = "HOLD"; d.code = "step_up_required"; d.message = "Waiting for Sam to confirm with a passkey.";
+        d.pending = "stepup";
+      } else {
+        lay("provider", "ALLOW", ["payments-high-value"], "Mandate present and identity confirmed with a passkey.");
+        lay("invoker", "ALLOW", ["finance-payments"], "The role may make payments.");
+        lay("mandate", "ALLOW", [m.id], "Saved payee, within the weekly limit.");
+        d.obls = ["Decrease the mandate's remaining amount by " + money(amt)];
+        d.message = "Allowed. Payment sent.";
+        d.result = { transfer_id: "tr_" + Math.random().toString(36).slice(2,9), status: "sent", amount: money(amt), payee: sc.args.payee };
+      }
+    }
+
+    if (sc.id === "payBad"){
+      d.cls = "money.pay.domestic";
+      d.attrs.push(["action.class", "money.pay.domestic", "Derived"], ["request.amountMinor", money(sc.args.amount_minor), "Derived"],
+        ["mandate.payeeAllowed", "false", "Verified"], ["request.argFromUntrusted", "true (payee first seen in an email)", "Detected"]);
+      lay("platform", "ALLOW", [], "No platform rule applies.");
+      lay("org", "ALLOW", [], "Payments are allowed for this agent's project.");
+      lay("provider", "ALLOW", ["payments-standard"], "Under $500.00, no step-up needed.");
+      lay("invoker", "DENY", ["no-injected-payees"], "The payee first appeared in untrusted email content.");
+      lay("mandate", "DENY", [state.mandate.id], "QuickLeads Ltd isn't one of Sam's saved payees.");
+      d.outcome = "DENY"; d.code = "mandate_scope";
+      d.message = "Blocked: QuickLeads Ltd isn't a saved payee, and its name came from an untrusted email.";
+    }
+    return d;
+  }
+
+  // ---------- receipts ----------
+  async function writeReceipt(sc, d, extra = {}){
+    if (!state.key) return null;
+    const prev = state.receipts.length ? state.receipts[state.receipts.length - 1].hash : "sha256:" + "0".repeat(64);
+    const forwardedAnyway = state.mode === "observe" && d.outcome !== "ALLOW";
+    const body = {
+      v: 1,
+      id: ulid("rcp"),
+      stream: "dp_demo:org_acme",
+      seq: state.receipts.length + 1,
+      prev,
+      issuedAt: new Date().toISOString(),
+      org: "org_acme",
+      agent: { id: "support-ops", version: "3.2.0" },
+      onBehalfOf: { principal: "sam@acme.example" },
+      action: { tool: sc.tool, class: d.cls, argsHash: "sha256:" + (await sha256Hex(canon(sc.args))).slice(0, 32) },
+      decision: {
+        outcome: d.outcome,
+        mode: state.mode,
+        reason: d.code,
+        layers: d.layers.map(l => ({ layer: l.name, verdict: l.verdict, policies: l.policies })),
+        obligations: d.obls
+      },
+      outcome: { forwarded: d.outcome === "ALLOW" || forwardedAnyway, note: forwardedAnyway ? "observe mode: recorded, not enforced" : null },
+      keyId: state.keyId,
+      alg: state.alg
+    };
+    if (extra.approval) body.approval = extra.approval;
+    if (extra.mandate) body.mandate = extra.mandate;
+    const c = canon(body);
+    const hash = "sha256:" + await sha256Hex(c);
+    const sig = await crypto.subtle.sign(signParams(), state.key.privateKey, enc.encode(c));
+    const obj = Object.assign({}, body, { sig: toB64(sig) });
+    const rec = { obj, hash, text: JSON.stringify(obj, null, 2), original: JSON.stringify(obj, null, 2) };
+    state.receipts.push(rec);
+    state.selected = state.receipts.length - 1;
+    renderChain();
+    await renderReceipt();
+    return rec;
+  }
+
+  async function verifyText(text, index){
+    const checks = [];
+    let obj;
+    try { obj = JSON.parse(text); checks.push([true, "Receipt is valid JSON"]); }
+    catch (e) { checks.push([false, "Receipt isn't valid JSON"]); return { ok: false, checks }; }
+    const sigB64 = obj.sig; delete obj.sig;
+    const c = canon(obj);
+    let sigOk = false;
+    try { sigOk = await crypto.subtle.verify(signParams(), state.key.publicKey, fromB64(sigB64 || ""), enc.encode(c)); } catch (e) { sigOk = false; }
+    checks.push([sigOk, sigOk ? "Signature matches the data-plane key" : "Signature doesn't match the content"]);
+    const hash = "sha256:" + await sha256Hex(c);
+    const expectedPrev = index > 0 ? state.receipts[index - 1].hash : "sha256:" + "0".repeat(64);
+    const prevOk = obj.prev === expectedPrev;
+    checks.push([prevOk, prevOk ? "Links to the previous receipt" : "Doesn't link to the previous receipt"]);
+    const next = state.receipts[index + 1];
+    if (next){
+      const nextOk = next.obj.prev === hash;
+      checks.push([nextOk, nextOk ? "Next receipt links to this one" : "Next receipt no longer links to this one"]);
+    }
+    return { ok: checks.every(x => x[0]), checks };
+  }
+
+  // ---------- rendering ----------
+  const chipClass = (v) => v === "ALLOW" ? "allow" : v === "DENY" ? "deny" : v === "HOLD" ? "hold" : "";
+  const verdictText = (v) => ({ ALLOW: "Allowed", DENY: "Blocked", HOLD: "Waiting", "N/A": "Not applicable" }[v] || v);
+
+  function renderDecision(sc, d){
+    $("decisionFor").textContent = sc.tool;
+    const observeNote = state.mode === "observe" && d.outcome !== "ALLOW"
+      ? "<p class=\"msg\"><strong>Observe mode:</strong> the call was forwarded anyway. In enforce mode it would be " + (d.outcome === "DENY" ? "blocked" : "held") + ".</p>" : "";
+    $("decision").innerHTML =
+      "<div class=\"verdict\"><span class=\"chip " + chipClass(d.outcome) + "\">" + verdictText(d.outcome) + "</span><h3>" + esc(d.cls) + "</h3>" +
+      (d.code ? "<span class=\"pid\">" + esc(d.code) + "</span>" : "") + "</div>" +
+      "<p class=\"msg\">" + esc(d.message) + "</p>" + observeNote +
+      "<ul class=\"layers\">" + d.layers.map(l =>
+        "<li><span class=\"lname\">" + esc(l.name) + "</span><span class=\"lbody\"><span class=\"chip " + chipClass(l.verdict) + "\">" + verdictText(l.verdict) + "</span>" +
+        (l.policies.length ? " <span class=\"pid\">" + l.policies.map(esc).join(", ") + "</span>" : "") +
+        "<p>" + esc(l.reason) + "</p></span></li>").join("") + "</ul>" +
+      (d.obls.length ? "<h4>What else had to happen</h4><ul class=\"obls\">" + d.obls.map(o => "<li>" + esc(o) + "</li>").join("") + "</ul>" : "") +
+      "<h4>Facts used, and how far each can be trusted</h4><div class=\"attrs-wrap\"><table class=\"attrs\"><thead><tr><th>Attribute</th><th>Value</th><th>Trust</th></tr></thead><tbody>" +
+      d.attrs.map(a => "<tr><td>" + esc(a[0]) + "</td><td>" + esc(a[1]) + "</td><td class=\"trust\">" + esc(a[2]) + "</td></tr>").join("") +
+      "</tbody></table></div>";
+  }
+
+  function renderChain(){
+    $("chainCount").textContent = state.receipts.length + " in chain";
+    $("chain").innerHTML = state.receipts.map((r, i) =>
+      "<li><button type=\"button\" data-i=\"" + i + "\" aria-current=\"" + (i === state.selected) + "\">" +
+      "<span class=\"seq\">#" + r.obj.seq + "</span><span>" + esc(r.obj.action.tool) + " <span class=\"chip " + chipClass(r.obj.decision.outcome) + "\">" + verdictText(r.obj.decision.outcome) + "</span></span>" +
+      "<span class=\"hash\">" + esc(r.hash.slice(7, 15)) + "</span></button></li>").join("");
+  }
+
+  function sealSVG(ok){
+    const col = ok ? "var(--allow)" : "var(--deny)";
+    return "<svg viewBox=\"0 0 100 100\" role=\"img\" aria-label=\"" + (ok ? "Signature valid" : "Verification failed") + "\">" +
+      "<circle class=\"ring\" cx=\"50\" cy=\"50\" r=\"44\" fill=\"none\" stroke=\"" + col + "\" stroke-width=\"3\"/>" +
+      "<circle cx=\"50\" cy=\"50\" r=\"36\" fill=\"none\" stroke=\"" + col + "\" stroke-width=\"1\" stroke-dasharray=\"2 3\"/>" +
+      (ok ? "<path d=\"M33 51 L45 63 L68 38\" fill=\"none\" stroke=\"" + col + "\" stroke-width=\"5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>"
+          : "<path class=\"crack\" d=\"M30 22 L46 44 L38 52 L56 70 L50 80\" fill=\"none\" stroke=\"" + col + "\" stroke-width=\"4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>") +
+      "</svg>";
+  }
+
+  async function renderReceipt(){
+    const view = $("receiptView");
+    if (state.selected < 0){ view.innerHTML = "<p class=\"empty\">Receipts appear here as the agent acts.</p>"; return; }
+    const r = state.receipts[state.selected];
+    view.innerHTML =
+      "<div class=\"seal-row\"><div class=\"seal\" id=\"seal\"></div><ul class=\"checks\" id=\"checks\"></ul></div>" +
+      "<label class=\"sr\" for=\"rjson\">Receipt JSON, editable</label>" +
+      "<textarea class=\"rjson\" id=\"rjson\" spellcheck=\"false\">" + esc(r.text) + "</textarea>" +
+      "<div class=\"actions\"><button type=\"button\" class=\"btn primary\" id=\"bVerify\">Verify receipt</button>" +
+      "<button type=\"button\" class=\"btn danger\" id=\"bTamper\">Change the outcome</button>" +
+      "<button type=\"button\" class=\"btn\" id=\"bRestore\">Restore original</button></div>" +
+      "<p class=\"hint\">Edit any character, then verify. The signature and the chain links are checked with the public key alone.</p>";
+    $("rjson").addEventListener("input", (e) => { r.text = e.target.value; });
+    $("bVerify").addEventListener("click", () => showVerify(state.selected));
+    $("bTamper").addEventListener("click", () => {
+      const t = $("rjson").value;
+      const swapped = t.includes("\"outcome\": \"DENY\"") ? t.replace("\"outcome\": \"DENY\"", "\"outcome\": \"ALLOW\"")
+        : t.includes("\"outcome\": \"HOLD\"") ? t.replace("\"outcome\": \"HOLD\"", "\"outcome\": \"ALLOW\"")
+        : t.replace("\"outcome\": \"ALLOW\"", "\"outcome\": \"DENY\"");
+      $("rjson").value = swapped; r.text = swapped; showVerify(state.selected);
+    });
+    $("bRestore").addEventListener("click", () => { r.text = r.original; $("rjson").value = r.original; showVerify(state.selected); });
+    await showVerify(state.selected);
+  }
+
+  async function showVerify(i){
+    const r = state.receipts[i];
+    const res = await verifyText(r.text, i);
+    $("seal").className = "seal" + (res.ok ? "" : " broken");
+    $("seal").innerHTML = sealSVG(res.ok);
+    $("checks").innerHTML = "<li><strong>" + (res.ok ? "Verified" : "Verification failed") + "</strong></li>" +
+      res.checks.map(c => "<li class=\"" + (c[0] ? "ok" : "bad") + "\">" + (c[0] ? "✓ " : "✗ ") + esc(c[1]) + "</li>").join("");
+    if (!res.ok){
+      requestAnimationFrame(() => { const s = $("seal"); if (s) s.classList.add("broken"); });
+    }
+  }
+
+  // ---------- transcript ----------
+  function addTurn(sc){
+    const t = $("transcript");
+    if (t.querySelector(".empty")) t.innerHTML = "";
+    const div = document.createElement("div");
+    div.className = "turn";
+    div.innerHTML = "<div class=\"who\">Agent</div><p class=\"say\">" + esc(sc.say) + "</p>" +
+      "<div class=\"call\">" + esc(sc.tool + "(" + JSON.stringify(sc.args, null, 2) + ")") + "</div>";
+    t.appendChild(div);
+    t.scrollTop = t.scrollHeight;
+    return div;
+  }
+
+  function showResult(turn, sc, d){
+    const forwardedAnyway = state.mode === "observe" && d.outcome !== "ALLOW";
+    const kind = forwardedAnyway ? "hold" : chipClass(d.outcome);
+    const div = document.createElement("div");
+    div.className = "result " + kind;
+    const msg = forwardedAnyway
+      ? "Forwarded in observe mode. Enforce mode would have " + (d.outcome === "DENY" ? "blocked it: " + d.message.replace(/^Blocked: /, "") : "held it for a human check.")
+      : d.message;
+    let html = "<strong>" + esc(msg) + "</strong>";
+    if (d.code && d.outcome !== "ALLOW") html += " <code>" + esc(d.code) + "</code>";
+    if (d.result) html += "<pre>" + esc(JSON.stringify(d.result, null, 2)) + "</pre>";
+    if (forwardedAnyway) html += "<pre>" + esc(JSON.stringify(simulatedResult(sc), null, 2)) + "</pre>";
+    div.innerHTML = html;
+    const btn = document.createElement("button");
+    btn.className = "explain-link"; btn.type = "button"; btn.textContent = "Show why";
+    btn.addEventListener("click", () => { renderDecision(sc, d); $("hDecision").scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" }); });
+    div.appendChild(btn);
+    turn.appendChild(div);
+    $("transcript").scrollTop = $("transcript").scrollHeight;
+  }
+
+  function simulatedResult(sc){
+    if (sc.id === "exfil") return { status: "sent", to: sc.args.to };
+    if (sc.id === "delete") return { rows_deleted: 3412 };
+    if (sc.id === "payBad") return { status: "sent", payee: sc.args.payee, amount: money(sc.args.amount_minor) };
+    if (sc.id === "pay") return { status: "sent", payee: sc.args.payee, amount: money(sc.args.amount_minor) };
+    return {};
+  }
+
+  async function finish(turn, sc, d, extra){
+    renderDecision(sc, d);
+    showResult(turn, sc, d);
+    if (sc.id === "read" && d.outcome === "ALLOW") state.taint.add("customer_pii");
+    if (sc.id === "pay" && d.outcome === "ALLOW"){
+      state.mandate.remainingMinor -= sc.args.amount_minor;
+      extra = Object.assign({}, extra, { mandate: { id: state.mandate.id, remaining: money(state.mandate.remainingMinor) } });
+    }
+    await writeReceipt(sc, d, extra || {});
+  }
+
+  function pendingCard(turn, sc, d){
+    const card = document.createElement("div");
+    card.className = "approval";
+    if (d.pending === "approval"){
+      card.innerHTML = "<div class=\"src\">Slack, #platform-oncall</div>" +
+        "<p><strong>Approve a hard delete in production?</strong></p>" +
+        "<dl><dt>Agent</dt><dd>support-ops v3.2, for sam@acme.example</dd><dt>Action</dt><dd>Hard delete, from a SQL DELETE on orders</dd>" +
+        "<dt>Affects</dt><dd>About 3,400 orders created before 2019</dd><dt>Why held</dt><dd>Company guardrail: production deletes need approval</dd><dt>Deadline</dt><dd>15 minutes, then it's denied</dd></dl>" +
+        "<div class=\"actions\"><button type=\"button\" class=\"btn primary\" data-a=\"approved\">Approve</button><button type=\"button\" class=\"btn\" data-a=\"rejected\">Reject</button></div>";
+    } else {
+      card.innerHTML = "<div class=\"src\">Sam's phone</div>" +
+        "<p><strong>Confirm a payment of " + money(sc.args.amount_minor) + " to " + esc(sc.args.payee) + "</strong></p>" +
+        "<p>Your mandate allows up to " + money(state.mandate.limitMinor) + " this week to saved payees. " + money(state.mandate.remainingMinor) + " is left. Payments over $500.00 need a fresh passkey check.</p>" +
+        "<div class=\"actions\"><button type=\"button\" class=\"btn primary\" data-a=\"done\">Confirm with passkey</button><button type=\"button\" class=\"btn\" data-a=\"declined\">Decline</button></div>";
+    }
+    turn.appendChild(card);
+    $("transcript").scrollTop = $("transcript").scrollHeight;
+    return new Promise(resolve => {
+      card.querySelectorAll("button").forEach(b => b.addEventListener("click", () => {
+        card.querySelectorAll("button").forEach(x => x.disabled = true);
+        resolve(b.dataset.a);
+      }));
+    });
+  }
+
+  async function run(sc){
+    if (state.busy) return;
+    state.busy = true; setScenarioDisabled(true);
+    try {
+      const turn = addTurn(sc);
+      let d = evaluate(sc);
+      if (d.outcome === "HOLD" && state.mode === "enforce"){
+        renderDecision(sc, d);
+        const note = document.createElement("div");
+        note.className = "result hold";
+        note.innerHTML = "<strong>" + esc(d.message) + "</strong> <code>" + esc(d.code) + "</code>";
+        turn.appendChild(note);
+        const answer = await pendingCard(turn, sc, d);
+        let extra = {};
+        if (d.pending === "approval"){
+          d = evaluate(sc, { approval: answer });
+          extra.approval = { decidedBy: "alex@acme.example", decision: answer, boundTo: "requestHash" };
+        } else if (answer === "done"){
+          d = evaluate(sc, { stepUp: "done" });
+          extra.approval = { stepUp: "passkey", by: "sam@acme.example" };
+        } else {
+          d = evaluate(sc);
+          d.outcome = "DENY"; d.code = "step_up_failed"; d.pending = null; d.result = null;
+          d.message = "Blocked: Sam declined the passkey check.";
+          d.layers[2] = { name: L.provider, verdict: "DENY", policies: ["payments-high-value"], reason: "The required identity check wasn't completed." };
+        }
+        await finish(turn, sc, d, extra);
+      } else {
+        await finish(turn, sc, d, {});
+      }
+    } finally {
+      state.busy = false; setScenarioDisabled(false);
+    }
+  }
+
+  function setScenarioDisabled(v){ document.querySelectorAll(".scenario").forEach(b => b.disabled = v); }
+
+  // ---------- wiring ----------
+  $("scenarios").innerHTML = scenarios.map(s =>
+    "<button type=\"button\" class=\"scenario\" data-id=\"" + s.id + "\"><span>" + esc(s.label) + "<small>" + esc(s.hint) + "</small></span><span class=\"go\">Run</span></button>").join("");
+  $("scenarios").addEventListener("click", (e) => {
+    const b = e.target.closest(".scenario"); if (!b) return;
+    run(scenarios.find(s => s.id === b.dataset.id));
+  });
+  $("chain").addEventListener("click", async (e) => {
+    const b = e.target.closest("button[data-i]"); if (!b) return;
+    state.selected = Number(b.dataset.i); renderChain(); await renderReceipt();
+  });
+  const setMode = (m) => {
+    state.mode = m;
+    $("mObserve").setAttribute("aria-pressed", String(m === "observe"));
+    $("mEnforce").setAttribute("aria-pressed", String(m === "enforce"));
+  };
+  $("mObserve").addEventListener("click", () => setMode("observe"));
+  $("mEnforce").addEventListener("click", () => setMode("enforce"));
+
+  initKeys();
+})();
+</script>
+</body>
+</html>
