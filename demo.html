@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Countersign — interactive demo</title>
+<title>Writness — interactive demo</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
@@ -136,17 +136,66 @@ table.attrs td:first-child{font-family:var(--mono);font-size:12px}
 textarea.rjson{width:100%;min-height:260px;resize:vertical;font-family:var(--mono);font-size:11.5px;line-height:1.45;color:var(--ink);background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:10px}
 .hint{font-size:13px;color:var(--ink-2);margin:6px 0 0}
 
+/* view switching */
+body[data-view="pub"] .v-agent{display:none}
+body[data-view="agent"] .v-pub{display:none}
+.steps-pub{list-style:none;margin:0 0 14px;padding:0;display:flex;flex-direction:column;gap:8px}
+.pstep{display:grid;grid-template-columns:28px 1fr auto;gap:10px;align-items:center;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--surface)}
+.pstep .num{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-size:12.5px;font-weight:600;background:var(--na-bg);color:var(--na)}
+.pstep.done .num{background:var(--allow-bg);color:var(--allow)}
+.pstep small{display:block;color:var(--ink-2);font-size:12.5px}
+.gw{padding:14px}
+.gw h3{font-size:15px;margin:0 0 6px;font-weight:600}
+.gw .lead{color:var(--ink-2);font-size:14px;margin:0 0 12px}
+.urlbox{font-family:var(--mono);font-size:12.5px;background:var(--paper);border:1px solid var(--line-2);border-radius:6px;padding:8px 10px;overflow-x:auto;white-space:nowrap}
+.findings{list-style:none;margin:8px 0 0;padding:0}
+.findings li{display:grid;grid-template-columns:auto 1fr;gap:10px;padding:8px 0;border-bottom:1px solid var(--line-2);font-size:14px}
+.seq{list-style:none;margin:0;padding:0;counter-reset:q}
+.seq li{counter-increment:q;display:grid;grid-template-columns:24px 1fr;gap:8px;padding:7px 0;border-bottom:1px solid var(--line-2);font-size:14px;opacity:.35;transition:opacity .25s ease}
+.seq li.on{opacity:1}
+.seq li::before{content:counter(q);font-weight:600;color:var(--ink-2);font-size:13px}
+.seq code{font-family:var(--mono);font-size:12px}
+@media (prefers-reduced-motion: reduce){.seq li{transition:none}}
+.consent{border:1px solid var(--line);border-radius:10px;padding:14px;margin:10px 0;background:var(--paper)}
+.consent p{margin:4px 0}
+.consent ul{margin:6px 0 10px;padding-left:18px;font-size:14px}
+.keycard{border:1px solid var(--line);border-radius:10px;padding:12px;background:var(--paper);font-size:14px}
+.keycard dl{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;margin:0}
+.keycard dt{color:var(--ink-2)}
+.keycard dd{margin:0}
+.bars{display:flex;flex-direction:column;gap:6px;margin:6px 0 12px}
+.bar{display:grid;grid-template-columns:150px 1fr 48px;gap:8px;align-items:center;font-size:13px}
+.bar .track{height:10px;background:var(--line-2);border-radius:5px;overflow:hidden}
+.bar .fill{height:100%;background:var(--ink-2);border-radius:5px}
+.bar .fill.allow{background:var(--allow)}
+.bar .fill.deny{background:var(--deny)}
+.bar .fill.hold{background:var(--hold)}
+.bar span:last-child{text-align:right;font-variant-numeric:tabular-nums;color:var(--ink-2)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin-bottom:12px}
+.kpi{border:1px solid var(--line-2);border-radius:8px;padding:8px 10px;background:var(--paper)}
+.kpi b{display:block;font-size:20px;font-weight:600}
+.kpi span{font-size:12.5px;color:var(--ink-2)}
+.plog{padding:4px 14px 14px;max-height:360px;overflow:auto;font-size:13.5px}
+.plog p{margin:6px 0;padding-bottom:6px;border-bottom:1px solid var(--line-2)}
+.plog code{font-family:var(--mono);font-size:12px}
 footer{padding:0 24px 28px;color:var(--ink-2);font-size:13px;max-width:880px}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 </style>
 </head>
-<body>
+<body data-view="pub">
 <header class="top">
   <div class="brand">
-    <h1>Countersign</h1>
-    <p>Control and proof for every AI agent action</p>
+    <h1>Writness</h1>
+    <p>Auth, limits and analytics for MCP servers, and control for the agents that call them</p>
   </div>
-  <div class="mode" role="group" aria-label="Enforcement mode">
+  <div class="mode" role="group" aria-label="Demo view">
+    <span>View</span>
+    <div class="seg">
+      <button type="button" id="vPub" aria-pressed="true">Publisher</button>
+      <button type="button" id="vAgent" aria-pressed="false">Agent team</button>
+    </div>
+  </div>
+  <div class="mode v-agent" role="group" aria-label="Enforcement mode">
     <span id="modeLabel">Mode</span>
     <div class="seg">
       <button type="button" id="mObserve" aria-pressed="false">Observe</button>
@@ -155,10 +204,22 @@ footer{padding:0 24px 28px;color:var(--ink-2);font-size:13px;max-width:880px}
   </div>
 </header>
 
-<p class="intro"><strong>Try it:</strong> pick something for the support-ops agent to do. Every tool call goes through the mediator, which decides, explains its decision, and writes a receipt signed in your browser. Change one character in a receipt and verification fails.</p>
+<p class="intro v-pub"><strong>You publish an MCP server.</strong> Walk through the six steps to put Writness in front of it: connect, let agents sign in properly, hand out keys, enforce limits, see who calls what, and verify a signed receipt for every call.</p>
+<p class="intro v-agent"><strong>Coming next: controls for teams running agents.</strong> Pick something for the support-ops agent to do. Every tool call goes through the mediator, which decides, explains its decision, and writes a receipt signed in your browser. Change one character in a receipt and verification fails.</p>
 
 <main>
-  <section class="col" aria-labelledby="hAgent">
+  <section class="col v-pub" aria-labelledby="hPub">
+    <h2 id="hPub">Your MCP server <span>Acme CRM, 5 tools</span></h2>
+    <ol class="steps-pub" id="pubSteps"></ol>
+    <div class="panel plog" id="pubLog" aria-live="polite"><p class="empty">Start with step 1.</p></div>
+  </section>
+
+  <section class="col v-pub" aria-labelledby="hGw">
+    <h2 id="hGw">Gateway <span id="gwFor">acme-crm</span></h2>
+    <div class="panel gw" id="gw"><p class="empty">Each step shows what Writness does for your server here.</p></div>
+  </section>
+
+  <section class="col v-agent" aria-labelledby="hAgent">
     <h2 id="hAgent">Agent <span>support-ops v3.2, acting for sam@acme.example</span></h2>
     <div class="scenarios" id="scenarios"></div>
     <div class="panel transcript" id="transcript" aria-live="polite">
@@ -166,7 +227,7 @@ footer{padding:0 24px 28px;color:var(--ink-2);font-size:13px;max-width:880px}
     </div>
   </section>
 
-  <section class="col" aria-labelledby="hDecision">
+  <section class="col v-agent" aria-labelledby="hDecision">
     <h2 id="hDecision">Decision <span id="decisionFor"></span></h2>
     <div class="panel decision" id="decision">
       <p class="empty">Each call is checked layer by layer: platform rules, company guardrails, the tool provider's rules, the agent's role, and the person's mandate. The details appear here.</p>
@@ -184,7 +245,7 @@ footer{padding:0 24px 28px;color:var(--ink-2);font-size:13px;max-width:880px}
 </main>
 
 <footer>
-  This is an interactive demo: the agent and its tools are simulated, and the policy logic follows the product's design. Receipts are canonical JSON, hashed with SHA-256, chained to the previous receipt, and signed with a key generated in this browser, so verification here is real.
+  This is an interactive concept demo: the gateway, clients, agents and tools are simulated, and the policy logic follows the product's design. Receipts are canonical JSON, hashed with SHA-256, chained to the previous receipt, and signed with a key generated in this browser, so verification here is real.
 </footer>
 
 <script>
@@ -396,8 +457,8 @@ footer{padding:0 24px 28px;color:var(--ink-2);font-size:13px;max-width:880px}
       prev,
       issuedAt: new Date().toISOString(),
       org: "org_acme",
-      agent: { id: "support-ops", version: "3.2.0" },
-      onBehalfOf: { principal: "sam@acme.example" },
+      agent: extra.agentObj || { id: "support-ops", version: "3.2.0" },
+      onBehalfOf: extra.onBehalf || { principal: "sam@acme.example" },
       action: { tool: sc.tool, class: d.cls, argsHash: "sha256:" + (await sha256Hex(canon(sc.args))).slice(0, 32) },
       decision: {
         outcome: d.outcome,
@@ -411,6 +472,7 @@ footer{padding:0 24px 28px;color:var(--ink-2);font-size:13px;max-width:880px}
       alg: state.alg
     };
     if (extra.approval) body.approval = extra.approval;
+    if (extra.gateway) body.gateway = extra.gateway;
     if (extra.mandate) body.mandate = extra.mandate;
     const c = canon(body);
     const hash = "sha256:" + await sha256Hex(c);
@@ -637,6 +699,237 @@ footer{padding:0 24px 28px;color:var(--ink-2);font-size:13px;max-width:880px}
   }
 
   function setScenarioDisabled(v){ document.querySelectorAll(".scenario").forEach(b => b.disabled = v); }
+
+
+  // ---------- publisher view ----------
+  const PUB = {
+    name: "Acme CRM",
+    upstream: "https://mcp.acme-crm.example/mcp",
+    gateway: "https://acme-crm.gw.writness.dev/mcp",
+    auth: "https://auth.acme-crm.gw.writness.dev",
+    tools: [
+      { name: "search_contacts", cls: "data.read" },
+      { name: "update_contact", cls: "data.update" },
+      { name: "export_contacts", cls: "data.export" },
+      { name: "delete_contact", cls: "data.delete.hard" },
+      { name: "send_email", cls: "comms.send.external" }
+    ]
+  };
+  const pubSteps = [
+    { id: "connect", title: "Connect your server", hint: "Get a gateway URL and a security scan" },
+    { id: "oauth", title: "Let an agent sign in", hint: "OAuth for MCP, done properly" },
+    { id: "key", title: "Give a consumer a key", hint: "Self-serve from your portal" },
+    { id: "burst", title: "Send a burst of agent traffic", hint: "Limits and scopes enforced" },
+    { id: "stats", title: "See who calls what", hint: "Usage analytics" },
+    { id: "proof", title: "Verify a receipt", hint: "Signed proof for every call" }
+  ];
+  const pub = { done: new Set(), busy: false, calls: [], keyShown: false, limitedIndex: -1 };
+  const sleep = (ms) => new Promise(r => setTimeout(r, matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : ms));
+
+  function renderPubSteps(){
+    $("pubSteps").innerHTML = pubSteps.map((st, i) => {
+      const enabled = !pub.busy && (i === 0 || pub.done.has(pubSteps[i - 1].id));
+      const done = pub.done.has(st.id);
+      return "<li class=\"pstep" + (done ? " done" : "") + "\"><span class=\"num\">" + (done ? "✓" : (i + 1)) + "</span>" +
+        "<span>" + esc(st.title) + "<small>" + esc(st.hint) + "</small></span>" +
+        "<button type=\"button\" class=\"btn" + (enabled && !done ? " primary" : "") + "\" data-step=\"" + st.id + "\"" + (enabled ? "" : " disabled") + ">" + (done ? "Again" : "Run") + "</button></li>";
+    }).join("");
+  }
+  function plog(html){
+    const box = $("pubLog");
+    if (box.querySelector(".empty")) box.innerHTML = "";
+    const p = document.createElement("p"); p.innerHTML = html; box.appendChild(p); box.scrollTop = box.scrollHeight;
+  }
+  const gwSet = (html) => { $("gw").innerHTML = html; };
+  const sevChip = (s) => "<span class=\"chip " + (s === "High" ? "deny" : s === "Medium" ? "hold" : "") + "\">" + s + "</span>";
+
+  async function gatewayReceipt(tool, cls, outcome, code, layers, gateway, agentId, principal){
+    const sc = { tool, args: { tool, client: gateway.client, at: Date.now() } };
+    const d = { cls, outcome, code, layers, obls: [] };
+    return writeReceipt(sc, d, { gateway, agentObj: { id: agentId }, onBehalf: { principal } });
+  }
+
+  async function stepConnect(){
+    gwSet("<h3>Your gateway is ready</h3><p class=\"lead\">Point MCP clients at the gateway URL. Your server stays private behind it.</p>" +
+      "<p class=\"lead\">Your server</p><div class=\"urlbox\">" + esc(PUB.upstream) + "</div>" +
+      "<p class=\"lead\" style=\"margin-top:10px\">Gateway URL for clients</p><div class=\"urlbox\">" + esc(PUB.gateway) + "</div>" +
+      "<h4>Security scan of your 5 tools</h4><ul class=\"findings\">" +
+      "<li>" + sevChip("High") + "<span><strong>delete_contact</strong> deletes records with no confirmation and is open to every client. Applied: requires the <code>contacts:delete</code> scope.</span></li>" +
+      "<li>" + sevChip("Medium") + "<span><strong>export_contacts</strong> returns personal data in bulk. Applied: emails and phone numbers masked, 100 rows per call.</span></li>" +
+      "<li>" + sevChip("Medium") + "<span><strong>send_email</strong> can send to any address. Applied: requires the <code>contacts:email</code> scope.</span></li>" +
+      "<li>" + sevChip("Low") + "<span>Two tool descriptions don't say when <em>not</em> to use them, which leads agents to misuse them. Suggested wording added to your review list.</span></li></ul>" +
+      "<p class=\"msg\">Default plan for new consumers: <strong>Free</strong>, 20 calls a minute and 5,000 a month.</p>");
+    plog("Connected <strong>" + esc(PUB.name) + "</strong>. Discovered 5 tools; 3 risks fixed with safe defaults.");
+  }
+
+  async function stepOauth(){
+    const items = [
+      "<strong>Claude (desktop)</strong> calls the gateway without a token and gets <code>401</code> with <code>WWW-Authenticate: Bearer resource_metadata=\".../.well-known/oauth-protected-resource\"</code>.",
+      "It reads the protected-resource metadata, which names the authorization server <code>" + esc(PUB.auth) + "</code>.",
+      "It reads the authorization server's metadata: endpoints, and PKCE with S256 required.",
+      "It registers itself as a client and receives <code>client_id cl_8f2a…</code>.",
+      "Sam sees a consent screen that names the client and the exact access requested.",
+      "A token is issued <strong>for this server only</strong> (its audience is the gateway URL), after PKCE is verified. It expires in 15 minutes.",
+      "The first call, <code>search_contacts</code>, succeeds. Your server never sees Sam's token; the gateway uses its own credential upstream."
+    ];
+    gwSet("<h3>OAuth for MCP, step by step</h3><p class=\"lead\">This is what a standard MCP client does when it meets your gateway.</p><ol class=\"seq\" id=\"seq\">" +
+      items.map(t => "<li><span>" + t + "</span></li>").join("") + "</ol><div id=\"consentSlot\"></div>");
+    const lis = () => document.querySelectorAll("#seq li");
+    for (let i = 0; i < 4; i++){ lis()[i].classList.add("on"); await sleep(450); }
+    lis()[4].classList.add("on");
+    $("consentSlot").innerHTML = "<div class=\"consent\"><p><strong>Claude (desktop) wants to access Acme CRM as sam@acme.example</strong></p>" +
+      "<ul><li>Read your contacts</li><li>Update contact details</li></ul><p class=\"hint\">It will not be able to delete contacts or send email. You can revoke access at any time.</p>" +
+      "<div class=\"actions\"><button type=\"button\" class=\"btn primary\" data-c=\"yes\">Allow</button><button type=\"button\" class=\"btn\" data-c=\"no\">Deny</button></div></div>";
+    const answer = await new Promise(res => $("consentSlot").querySelectorAll("button").forEach(b => b.addEventListener("click", () => res(b.dataset.c))));
+    $("consentSlot").innerHTML = "";
+    if (answer === "no"){
+      plog("Sam denied access. No token was issued, so Claude can't call your tools.");
+      await gatewayReceipt("search_contacts", "data.read", "DENY", "consent_denied",
+        [{ name: "Authentication", verdict: "DENY", policies: ["oauth-consent"], reason: "The user denied consent." }],
+        { client: "Claude (desktop)", auth: "oauth", plan: "user" }, "claude-desktop", "sam@acme.example");
+      return false;
+    }
+    for (let i = 5; i < 7; i++){ await sleep(450); lis()[i].classList.add("on"); }
+    await gatewayReceipt("search_contacts", "data.read", "ALLOW", null,
+      [{ name: "Authentication", verdict: "ALLOW", policies: ["oauth-audience-bound"], reason: "Valid token for this server; PKCE verified." },
+       { name: "Scopes", verdict: "ALLOW", policies: ["contacts:read"], reason: "Read access was granted." },
+       { name: "Plan limits", verdict: "ALLOW", policies: ["user-default"], reason: "Within limits." }],
+      { client: "Claude (desktop)", auth: "oauth", plan: "user" }, "claude-desktop", "sam@acme.example");
+    plog("Claude (desktop) signed in as sam@acme.example with read and update access. First call succeeded and was receipted.");
+    return true;
+  }
+
+  async function stepKey(){
+    gwSet("<h3>Your consumer portal</h3><p class=\"lead\">Consumers sign up and create keys themselves, on the plan you choose.</p>" +
+      "<div class=\"keycard\"><dl><dt>Consumer</dt><dd>Northwind Sales Agent (run by Northwind Ltd)</dd><dt>Plan</dt><dd>Free: 20 calls a minute, 5,000 a month</dd>" +
+      "<dt>Access</dt><dd><code>contacts:read</code>, <code>contacts:update</code></dd><dt>Key</dt><dd id=\"keyVal\">Not created yet</dd></dl>" +
+      "<div class=\"actions\"><button type=\"button\" class=\"btn primary\" id=\"bKey\">Create key</button></div></div>");
+    await new Promise(res => $("bKey").addEventListener("click", res, { once: true }));
+    $("keyVal").innerHTML = "<code>wsk_test_7QhM…r2Lx</code> (shown once; store it securely)";
+    $("bKey").disabled = true;
+    plog("Northwind Ltd created a key for its sales agent on the Free plan.");
+  }
+
+  async function stepBurst(){
+    const calls = [];
+    for (let i = 0; i < 18; i++) calls.push({ client: "Northwind Sales Agent", tool: i % 3 === 0 ? "update_contact" : "search_contacts", auth: "api_key" });
+    for (let i = 0; i < 4; i++) calls.push({ client: "Northwind Sales Agent", tool: "delete_contact", auth: "api_key" });
+    for (let i = 0; i < 4; i++) calls.push({ client: "Northwind Sales Agent", tool: "search_contacts", auth: "api_key" });
+    for (let i = 0; i < 6; i++) calls.push({ client: "Claude (desktop)", tool: i % 2 ? "update_contact" : "search_contacts", auth: "oauth" });
+    for (let i = 0; i < 4; i++) calls.push({ client: "Unknown client", tool: "export_contacts", auth: "none" });
+    // deterministic interleave
+    const order = calls.map((c, i) => [((i * 37) % 41), c]).sort((a, b) => a[0] - b[0]).map(x => x[1]);
+    gwSet("<h3>Live traffic</h3><p class=\"lead\">36 calls arrive from three clients in under a minute.</p><div class=\"kpis\" id=\"live\"></div><div id=\"liveNote\"></div>");
+    const tally = { ALLOW: 0, rate: 0, auth: 0, scope: 0 };
+    let northwind = 0, firstLimit = true, firstScope = true, firstAuth = true;
+    const drawLive = () => { $("live").innerHTML =
+      "<div class=\"kpi\"><b>" + tally.ALLOW + "</b><span>Allowed</span></div>" +
+      "<div class=\"kpi\"><b>" + tally.rate + "</b><span>Over plan limit</span></div>" +
+      "<div class=\"kpi\"><b>" + tally.scope + "</b><span>Missing scope</span></div>" +
+      "<div class=\"kpi\"><b>" + tally.auth + "</b><span>No credentials</span></div>"; };
+    drawLive();
+    pub.calls = [];
+    for (const c of order){
+      let outcome = "ALLOW", code = null, layers = [];
+      const tcls = PUB.tools.find(t => t.name === c.tool).cls;
+      if (c.auth === "none"){
+        outcome = "DENY"; code = "auth_missing"; tally.auth++;
+        layers = [{ name: "Authentication", verdict: "DENY", policies: [], reason: "No token or key." }];
+        if (firstAuth){ plog("An <strong>unknown client</strong> tried <code>export_contacts</code> with no credentials: refused with <code>401</code> and sign-in instructions."); firstAuth = false; }
+      } else if (c.client === "Northwind Sales Agent"){
+        northwind++;
+        if (northwind > 20){
+          outcome = "DENY"; code = "rate_limited"; tally.rate++;
+          layers = [{ name: "Authentication", verdict: "ALLOW", policies: ["api-key"], reason: "Valid key." },
+                    { name: "Plan limits", verdict: "DENY", policies: ["plan-free"], reason: "20 calls a minute on the Free plan. Retry after 38 seconds." }];
+          if (firstLimit){ plog("Northwind reached its <strong>Free plan limit</strong>. The agent is told \"limit reached, retry after 38 seconds\" instead of failing silently."); firstLimit = false; }
+        } else if (c.tool === "delete_contact"){
+          outcome = "DENY"; code = "insufficient_scope"; tally.scope++;
+          layers = [{ name: "Authentication", verdict: "ALLOW", policies: ["api-key"], reason: "Valid key." },
+                    { name: "Scopes", verdict: "DENY", policies: ["contacts:delete"], reason: "This key doesn't have the contacts:delete scope." }];
+          if (firstScope){ plog("Northwind's agent tried <code>delete_contact</code> without the delete scope: blocked, with a message saying which scope is needed."); firstScope = false; }
+        } else {
+          tally.ALLOW++;
+          layers = [{ name: "Authentication", verdict: "ALLOW", policies: ["api-key"], reason: "Valid key." },
+                    { name: "Scopes", verdict: "ALLOW", policies: [c.tool === "update_contact" ? "contacts:update" : "contacts:read"], reason: "Granted." },
+                    { name: "Plan limits", verdict: "ALLOW", policies: ["plan-free"], reason: "Call " + northwind + " of 20 this minute." }];
+        }
+      } else {
+        tally.ALLOW++;
+        layers = [{ name: "Authentication", verdict: "ALLOW", policies: ["oauth-audience-bound"], reason: "Valid token for this server." },
+                  { name: "Scopes", verdict: "ALLOW", policies: [c.tool === "update_contact" ? "contacts:update" : "contacts:read"], reason: "Granted by Sam." }];
+      }
+      const ms = outcome === "ALLOW" ? 80 + Math.round(Math.random() * 160) : 3 + Math.round(Math.random() * 4);
+      pub.calls.push({ client: c.client, tool: c.tool, outcome, code, ms });
+      const principal = c.client === "Claude (desktop)" ? "sam@acme.example" : c.client === "Northwind Sales Agent" ? "northwind-ltd (service)" : "unknown";
+      const agentId = c.client === "Claude (desktop)" ? "claude-desktop" : c.client === "Northwind Sales Agent" ? "northwind-sales-agent" : "unknown";
+      const rec = await gatewayReceipt(c.tool, tcls, outcome, code, layers, { client: c.client, auth: c.auth, plan: c.client === "Northwind Sales Agent" ? "free" : "user" }, agentId, principal);
+      if (code === "rate_limited" && pub.limitedIndex < 0 && rec) pub.limitedIndex = state.receipts.length - 1;
+      drawLive();
+      await sleep(70);
+    }
+    $("liveNote").innerHTML = "<p class=\"msg\">Every call, allowed or refused, got a signed receipt in the chain on the right.</p>";
+    plog("Burst finished: " + tally.ALLOW + " allowed, " + (tally.rate + tally.scope + tally.auth) + " refused with clear reasons.");
+  }
+
+  function stepStats(){
+    const total = pub.calls.length || 1;
+    const by = (key) => { const m = {}; pub.calls.forEach(c => m[c[key]] = (m[c[key]] || 0) + 1); return Object.entries(m).sort((a, b) => b[1] - a[1]); };
+    const allowed = pub.calls.filter(c => c.outcome === "ALLOW");
+    const lat = allowed.map(c => c.ms).sort((a, b) => a - b);
+    const p95 = lat.length ? lat[Math.min(lat.length - 1, Math.floor(lat.length * 0.95))] : 0;
+    const bars = (rows, cls) => "<div class=\"bars\">" + rows.map(([k, v]) =>
+      "<div class=\"bar\"><span>" + esc(k) + "</span><span class=\"track\"><span class=\"fill " + (cls ? cls(k) : "") + "\" style=\"width:" + Math.round(v / total * 100) + "%\"></span></span><span>" + v + "</span></div>").join("") + "</div>";
+    const outcomes = [["Allowed", allowed.length], ["Over plan limit", pub.calls.filter(c => c.code === "rate_limited").length],
+      ["Missing scope", pub.calls.filter(c => c.code === "insufficient_scope").length], ["No credentials", pub.calls.filter(c => c.code === "auth_missing").length]];
+    gwSet("<h3>Who calls what</h3><p class=\"lead\">Usage for the last minute, across every client and agent.</p>" +
+      "<div class=\"kpis\"><div class=\"kpi\"><b>" + pub.calls.length + "</b><span>Calls</span></div>" +
+      "<div class=\"kpi\"><b>" + Math.round(allowed.length / total * 100) + "%</b><span>Allowed</span></div>" +
+      "<div class=\"kpi\"><b>" + p95 + " ms</b><span>p95 latency</span></div>" +
+      "<div class=\"kpi\"><b>3</b><span>Clients</span></div></div>" +
+      "<h4>Calls by client</h4>" + bars(by("client")) +
+      "<h4>Calls by tool</h4>" + bars(by("tool")) +
+      "<h4>Outcomes</h4>" + bars(outcomes, k => k === "Allowed" ? "allow" : k === "Over plan limit" ? "hold" : "deny") +
+      "<h4>What this tells you</h4><ul class=\"obls\"><li>Northwind hit its Free limit " + outcomes[1][1] + " times in a minute: a strong upgrade candidate.</li>" +
+      "<li>Its agent tried to delete contacts " + outcomes[2][1] + " times without permission: worth a conversation, or a clearer tool description.</li>" +
+      "<li>An unknown client tried " + outcomes[3][1] + " times with no credentials: watched by abuse protection.</li></ul>");
+    plog("Analytics updated: calls by client and tool, outcomes, latency and suggestions.");
+  }
+
+  async function stepProof(){
+    const idx = pub.limitedIndex >= 0 ? pub.limitedIndex : state.receipts.length - 1;
+    gwSet("<h3>Proof for every call</h3><p class=\"lead\">Each call through the gateway, allowed or refused, has a receipt signed by the gateway and chained to the one before. You, your customers or an auditor can verify it with the public key.</p>" +
+      "<p class=\"msg\">The receipt for a call refused by the plan limit is open on the right. Press <strong>Verify receipt</strong>, then <strong>Change the outcome</strong> to see verification fail.</p>");
+    if (idx >= 0){ state.selected = idx; renderChain(); await renderReceipt(); }
+    $("hReceipts").scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
+    plog("Opened a signed receipt. Try changing one character and verifying again.");
+  }
+
+  async function runPubStep(id){
+    if (pub.busy) return;
+    pub.busy = true; renderPubSteps();
+    try {
+      let ok = true;
+      if (id === "connect") await stepConnect();
+      if (id === "oauth") ok = await stepOauth();
+      if (id === "key") await stepKey();
+      if (id === "burst") await stepBurst();
+      if (id === "stats") stepStats();
+      if (id === "proof") await stepProof();
+      if (ok !== false) pub.done.add(id);
+    } finally { pub.busy = false; renderPubSteps(); }
+  }
+  $("pubSteps").addEventListener("click", (e) => { const b = e.target.closest("button[data-step]"); if (b && !b.disabled) runPubStep(b.dataset.step); });
+  renderPubSteps();
+
+  const setView = (v) => {
+    document.body.dataset.view = v;
+    $("vPub").setAttribute("aria-pressed", String(v === "pub"));
+    $("vAgent").setAttribute("aria-pressed", String(v === "agent"));
+  };
+  $("vPub").addEventListener("click", () => { setView("pub"); history.replaceState(null, "", "#publisher"); });
+  $("vAgent").addEventListener("click", () => { setView("agent"); history.replaceState(null, "", "#agents"); });
+  setView(location.hash === "#agents" ? "agent" : "pub");
 
   // ---------- wiring ----------
   $("scenarios").innerHTML = scenarios.map(s =>

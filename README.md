@@ -1,10 +1,11 @@
-# Countersign site
+# Writness site
 
-- index.html — landing page
-- demo.html — interactive demo (served at /demo)
-- vercel.json — clean URLs and basic security headers
+- index.html: landing page for MCP server publishers
+- demo.html: interactive demo (served at /demo). Publisher view by default; /demo#agents opens the agent-team preview
+- vercel.json: clean URLs and basic security headers
 
-Before deploying, edit the settings near the bottom of index.html:
-- CONTACT_EMAIL — your email address
-- FORM_ENDPOINT — a form service URL (for example a Formspree form endpoint) so sign-ups are collected
-Also replace "[Founder name]" in the "Why we're building this" section.
+Settings near the bottom of index.html:
+- CONTACT_EMAIL is set to jigyasacanada@gmail.com
+- FORM_ENDPOINT: paste a form service URL (for example a Formspree endpoint) so requests arrive by email without opening the visitor's mail app
+
+To rename the product later, find and replace "Writness" in index.html and demo.html.
