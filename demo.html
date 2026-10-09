@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Writness — interactive demo</title>
+<title>Attestry — interactive demo</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
@@ -144,6 +144,13 @@ body:not([data-view="led"]) .v-led{display:none}
 body:not([data-view="studio"]) .v-studio{display:none}
 body:not([data-view="e2e"]) .v-e2e{display:none}
 body:not([data-view="kpi"]) .v-kpi{display:none}
+body:not([data-view="mkt"]) .v-mkt{display:none}
+.listing{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:8px 0;background:var(--surface)}
+.listing .lh{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:baseline}
+.listing .meta{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px;color:var(--ink-2);margin-top:4px}
+.profiles{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.profiles button[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.intentbox{width:100%;font:inherit;font-size:14px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--paper);color:var(--ink)}
 body[data-view="kpi"] .col-receipts{display:none}
 .seg{flex-wrap:wrap}
 .col-wide{grid-column:1 / -1}
@@ -228,7 +235,7 @@ footer{padding:0 24px 28px;color:var(--ink-2);font-size:13px;max-width:880px}
 <body data-view="e2e">
 <header class="top">
   <div class="brand">
-    <h1>Writness</h1>
+    <h1>Attestry</h1>
     <p>Auth, limits and analytics for MCP servers, and control for the agents that call them</p>
   </div>
   <div class="mode" role="group" aria-label="Demo view">
@@ -236,6 +243,7 @@ footer{padding:0 24px 28px;color:var(--ink-2);font-size:13px;max-width:880px}
     <div class="seg">
       <button type="button" id="vE2e" aria-pressed="true">End to end</button>
       <button type="button" id="vKpi" aria-pressed="false">Metrics</button>
+      <button type="button" id="vMkt" aria-pressed="false">Marketplace</button>
       <button type="button" id="vPub" aria-pressed="false">Publisher</button>
       <button type="button" id="vAgent" aria-pressed="false">Agent team</button>
       <button type="button" id="vId" aria-pressed="false">Agent ID</button>
@@ -253,8 +261,9 @@ footer{padding:0 24px 28px;color:var(--ink-2);font-size:13px;max-width:880px}
 </header>
 
 <p class="intro v-e2e"><strong>The whole lifecycle in ten steps.</strong> A publisher and two invokers onboard securely and get identities with trust chains; the publisher registers capabilities, policies and token rates; an invoker discovers the catalogue, signs a smart contract, gets user consent and calls through the enforcement point, with pass and fail decisions, receipts on both sides, a shared ledger and settlement in tokens. Each company is an isolated tenant. Other views go deeper into each part.</p>
+<p class="intro v-mkt"><strong>Where this is heading: a trusted marketplace for agents.</strong> Browse certified listings, state an intent instead of naming a tool, see how the platform routes it within every rule, and how limits, certification, bounties, wallets and disputes work. Signatures and proofs are real; providers, tokens and payouts are simulated.</p>
 <p class="intro v-kpi"><strong>Metrics and KPIs.</strong> Aggregated across tenants for the platform operator, or scoped to one tenant to show isolation. Filter by publisher, invoker, category, outcome and time, and group by any dimension. Data is illustrative, plus the calls you make in this demo.</p>
-<p class="intro v-pub"><strong>You publish an MCP server.</strong> Walk through the six steps to put Writness in front of it: connect, let agents sign in properly, hand out keys, enforce limits, see who calls what, and verify a signed receipt for every call.</p>
+<p class="intro v-pub"><strong>You publish an MCP server.</strong> Walk through the six steps to put Attestry in front of it: connect, let agents sign in properly, hand out keys, enforce limits, see who calls what, and verify a signed receipt for every call.</p>
 <p class="intro v-id"><strong>Agent ID: who stands behind an agent.</strong> Register an agent, link it to the organisation that owns it and the person who manages it, prove its identity on every call, build reputation from its receipts, and anchor its history so nobody can rewrite it. Credentials and proofs here are really signed and checked in your browser.</p>
 <p class="intro v-led"><strong>Trust ledger and payments.</strong> Smart-contract ideas without putting decisions on a chain: signed agreements, programmable mandates, pay-per-call with tokens, escrow on proven outcomes, selective disclosure of credentials, and a consortium ledger that no single party can rewrite. Signatures and hashes are real; tokens and settlement are simulated, with no real money.</p>
 <p class="intro v-studio"><strong>Consent, rules and money.</strong> How people stay in control of their agents, how rules are written and changed safely, how one call is checked on both sides, and how publishers and the platform earn. Consent receipts, policy bundles and cross-signed receipts are really signed; operator events and revenue figures are illustrative.</p>
@@ -272,6 +281,17 @@ footer{padding:0 24px 28px;color:var(--ink-2);font-size:13px;max-width:880px}
     <div class="panel gw" id="ePanel"><p class="empty">Identities, catalogue, contracts, decisions, ledger and settlement appear here.</p></div>
   </section>
 
+  <section class="col v-mkt" aria-labelledby="hMkt">
+    <h2 id="hMkt">Marketplace <span>Acme Ltd's support agent needs a refund done</span></h2>
+    <ol class="steps-pub" id="mSteps"></ol>
+    <div class="panel plog" id="mLog" aria-live="polite"><p class="empty">Start with step 1.</p></div>
+  </section>
+
+  <section class="col v-mkt" aria-labelledby="hMktPanel">
+    <h2 id="hMktPanel">What happens <span id="mFor"></span></h2>
+    <div class="panel gw" id="mPanel"><p class="empty">Listings, intents, routing, limits, certification, bounties, wallets and disputes appear here.</p></div>
+  </section>
+
   <section class="col col-wide v-kpi" aria-labelledby="hKpi">
     <h2 id="hKpi">Metrics and KPIs <span id="kScopeLbl">Platform view</span></h2>
     <div class="panel filters" id="kFilters"></div>
@@ -286,7 +306,7 @@ footer{padding:0 24px 28px;color:var(--ink-2);font-size:13px;max-width:880px}
 
   <section class="col v-pub" aria-labelledby="hGw">
     <h2 id="hGw">Gateway <span id="gwFor">acme-crm</span></h2>
-    <div class="panel gw" id="gw"><p class="empty">Each step shows what Writness does for your server here.</p></div>
+    <div class="panel gw" id="gw"><p class="empty">Each step shows what Attestry does for your server here.</p></div>
   </section>
 
   <section class="col v-id" aria-labelledby="hId">
@@ -808,8 +828,8 @@ footer{padding:0 24px 28px;color:var(--ink-2);font-size:13px;max-width:880px}
   const PUB = {
     name: "Acme CRM",
     upstream: "https://mcp.acme-crm.example/mcp",
-    gateway: "https://acme-crm.gw.writness.dev/mcp",
-    auth: "https://auth.acme-crm.gw.writness.dev",
+    gateway: "https://acme-crm.gw.attestry.dev/mcp",
+    auth: "https://auth.acme-crm.gw.attestry.dev",
     tools: [
       { name: "search_contacts", cls: "data.read" },
       { name: "update_contact", cls: "data.update" },
@@ -1029,8 +1049,8 @@ footer{padding:0 24px 28px;color:var(--ink-2);font-size:13px;max-width:880px}
   // ---------- Agent ID view ----------
   const ID = {
     orgDid: "did:web:acme.example",
-    agentDid: "did:web:id.writness.dev:agents:acme:support-ops",
-    registryDid: "did:web:id.writness.dev"
+    agentDid: "did:web:id.attestry.dev:agents:acme:support-ops",
+    registryDid: "did:web:id.attestry.dev"
   };
   const idSteps = [
     { id: "reg", title: "Register the agent", hint: "A DID, keys and a passport page" },
@@ -1078,7 +1098,7 @@ footer{padding:0 24px 28px;color:var(--ink-2);font-size:13px;max-width:880px}
     ident.keys.agent = ident.keys.agent || await genKey();
     ident.keys.registry = ident.keys.registry || await genKey();
     const agentKid = await keyId(ident.keys.agent);
-    ident.didDoc = { id: ID.agentDid, verificationMethod: [{ id: ID.agentDid + "#key-1", type: state.alg, keyFingerprint: agentKid }], service: [{ type: "AgentPassport", endpoint: "https://id.writness.dev/agents/acme/support-ops" }] };
+    ident.didDoc = { id: ID.agentDid, verificationMethod: [{ id: ID.agentDid + "#key-1", type: state.alg, keyFingerprint: agentKid }], service: [{ type: "AgentPassport", endpoint: "https://id.attestry.dev/agents/acme/support-ops" }] };
     idSet("<h3>Agent registered</h3><p class=\"lead\">The agent now has a global identifier that anyone can resolve, and its own key generated for it (in production, held in hardware).</p>" +
       "<p class=\"lead\">Identifier</p><div class=\"urlbox\">" + esc(ID.agentDid) + "</div>" +
       "<h4>DID document (what anyone resolving it sees)</h4><div class=\"call\">" + esc(JSON.stringify(ident.didDoc, null, 2)) + "</div>" +
@@ -1391,7 +1411,7 @@ footer{padding:0 24px 28px;color:var(--ink-2);font-size:13px;max-width:880px}
   async function blockHash(b){ return "sha256:" + await sha256Hex(canon(b)); }
   async function ledChain(){
     await ensureKeys();
-    led.members = [{ name: "Acme CRM (publisher)", key: ident.keys.publisher }, { name: "Writness registry", key: ident.keys.registry }, { name: "Telco operator (partner)", key: ident.keys.operator }];
+    led.members = [{ name: "Acme CRM (publisher)", key: ident.keys.publisher }, { name: "Attestry registry", key: ident.keys.registry }, { name: "Telco operator (partner)", key: ident.keys.operator }];
     led.blocks = [];
     const recs = state.receipts.map(r => r.hash.slice(7));
     const batches = [recs.slice(0, Math.ceil(recs.length / 3)), recs.slice(Math.ceil(recs.length / 3), Math.ceil(recs.length * 2 / 3)), recs.slice(Math.ceil(recs.length * 2 / 3))].filter(b => b.length);
@@ -1419,7 +1439,7 @@ footer{padding:0 24px 28px;color:var(--ink-2);font-size:13px;max-width:880px}
       rows.push({ blk, h, endorsed, linkOk });
       prevExpected = h;
     }
-    ledSet("<h3>Consortium ledger</h3><p class=\"lead\">Partners who share agent traffic can run a small permissioned ledger. Each block holds only the Merkle root of a batch of receipt hashes (no personal data), links to the previous block, and needs all three members to endorse it. No single party, including Writness, can rewrite history.</p>" +
+    ledSet("<h3>Consortium ledger</h3><p class=\"lead\">Partners who share agent traffic can run a small permissioned ledger. Each block holds only the Merkle root of a batch of receipt hashes (no personal data), links to the previous block, and needs all three members to endorse it. No single party, including Attestry, can rewrite history.</p>" +
       "<table class=\"blocks\"><thead><tr><th>Block</th><th>Receipts</th><th>Hash</th><th>Links to previous</th><th>Endorsed</th></tr></thead><tbody>" +
       rows.map(r => "<tr><td>#" + r.blk.b.height + "</td><td>" + r.blk.b.receipts + "</td><td><code>" + esc(r.h.slice(7, 19)) + "…</code></td><td>" + (r.linkOk ? "<span class=\"ok\">✓</span>" : "<span class=\"bad\">✗ broken</span>") + "</td><td>" + (r.endorsed === 3 ? "<span class=\"ok\">✓ 3 of 3</span>" : "<span class=\"bad\">✗ " + r.endorsed + " of 3</span>") + "</td></tr>").join("") +
       "</tbody></table>" +
@@ -1666,16 +1686,16 @@ footer{padding:0 24px 28px;color:var(--ink-2);font-size:13px;max-width:880px}
     const rows = consumers.map(c => { const overage = Math.max(0, c.calls - c.included) * c.over; return Object.assign({}, c, { overage, total: c.base + overage }); });
     const subtotal = rows.reduce((a, r) => a + r.total, 0) + outcomeFees;
     const take = 0.10;
-    stSet("<h3>Monetization: how everyone earns, in tokens</h3><p class=\"lead\">Acme CRM charges its consumers in tokens through Writness. Usage from every call is rated against each consumer's plan; Writness keeps a share and pays out the rest. Figures are illustrative.</p>" +
+    stSet("<h3>Monetization: how everyone earns, in tokens</h3><p class=\"lead\">Acme CRM charges its consumers in tokens through Attestry. Usage from every call is rated against each consumer's plan; Attestry keeps a share and pays out the rest. Figures are illustrative.</p>" +
       "<h4>Acme CRM's plans for its consumers</h4><table class=\"blocks\"><thead><tr><th>Plan</th><th>Tokens a month</th><th>Includes</th></tr></thead><tbody>" + plans.map(p => "<tr><td>" + p[0] + "</td><td>" + usd(p[1]) + "</td><td>" + p[2] + "</td></tr>").join("") + "</tbody></table>" +
       "<h4>This month's invoices (rated from receipts)</h4><table class=\"blocks\"><thead><tr><th>Consumer</th><th>Plan</th><th>Calls</th><th>Overage</th><th>Total</th></tr></thead><tbody>" +
       rows.map(r => "<tr><td>" + esc(r.name) + "</td><td>" + r.plan + "</td><td>" + r.calls.toLocaleString("en-US") + "</td><td>" + usd(r.overage) + "</td><td>" + usd(r.total) + "</td></tr>").join("") +
       "<tr><td>Outcome fees</td><td>Refunds issued</td><td>37</td><td>-</td><td>" + usd(outcomeFees) + "</td></tr></tbody></table>" +
-      "<div class=\"kpis\"><div class=\"kpi\"><b>" + usd(subtotal) + "</b><span>Acme CRM billed</span></div><div class=\"kpi\"><b>" + usd(subtotal * take) + "</b><span>Writness take (10%)</span></div><div class=\"kpi\"><b>" + usd(subtotal * (1 - take)) + "</b><span>Paid out to Acme CRM</span></div><div class=\"kpi\"><b>19,900 TKN</b><span>Acme's Writness plan</span></div></div>" +
+      "<div class=\"kpis\"><div class=\"kpi\"><b>" + usd(subtotal) + "</b><span>Acme CRM billed</span></div><div class=\"kpi\"><b>" + usd(subtotal * take) + "</b><span>Attestry take (10%)</span></div><div class=\"kpi\"><b>" + usd(subtotal * (1 - take)) + "</b><span>Paid out to Acme CRM</span></div><div class=\"kpi\"><b>19,900 TKN</b><span>Acme's Attestry plan</span></div></div>" +
       "<h4>Scale it</h4>" +
-      "<div class=\"rng\"><label for=\"mPubs\">Publishers on Writness</label><span id=\"vPubs\"></span><input type=\"range\" id=\"mPubs\" min=\"100\" max=\"20000\" step=\"100\" value=\"2000\"></div>" +
-      "<div class=\"rng\"><label for=\"mPaid\">Share on paid Writness plans</label><span id=\"vPaid\"></span><input type=\"range\" id=\"mPaid\" min=\"5\" max=\"60\" step=\"1\" value=\"25\"></div>" +
-      "<div class=\"rng\"><label for=\"mPlan\">Average Writness plan a month</label><span id=\"vPlan\"></span><input type=\"range\" id=\"mPlan\" min=\"2900\" max=\"99900\" step=\"1000\" value=\"15000\"></div>" +
+      "<div class=\"rng\"><label for=\"mPubs\">Publishers on Attestry</label><span id=\"vPubs\"></span><input type=\"range\" id=\"mPubs\" min=\"100\" max=\"20000\" step=\"100\" value=\"2000\"></div>" +
+      "<div class=\"rng\"><label for=\"mPaid\">Share on paid Attestry plans</label><span id=\"vPaid\"></span><input type=\"range\" id=\"mPaid\" min=\"5\" max=\"60\" step=\"1\" value=\"25\"></div>" +
+      "<div class=\"rng\"><label for=\"mPlan\">Average Attestry plan a month</label><span id=\"vPlan\"></span><input type=\"range\" id=\"mPlan\" min=\"2900\" max=\"99900\" step=\"1000\" value=\"15000\"></div>" +
       "<div class=\"rng\"><label for=\"mGmv\">Average consumer billing per paid publisher a month</label><span id=\"vGmv\"></span><input type=\"range\" id=\"mGmv\" min=\"0\" max=\"2000000\" step=\"25000\" value=\"200000\"></div>" +
       "<div class=\"rng\"><label for=\"mAgents\">Agent teams on paid plans</label><span id=\"vAgents\"></span><input type=\"range\" id=\"mAgents\" min=\"0\" max=\"10000\" step=\"100\" value=\"1000\"></div>" +
       "<div class=\"kpis\" id=\"mOut\"></div><p class=\"hint\">Assumes a 10% take on consumer billing and about 30,000 tokens a month per paid agent team. Illustrative only; real pricing is still being tested.</p>");
@@ -1759,12 +1779,12 @@ footer{padding:0 24px 28px;color:var(--ink-2);font-size:13px;max-width:880px}
   async function eOnPub(){
     const t = TEN.pub;
     const r = await onboardTenant(t);
-    const svc = await issueCred(E.keys[t.id], t.did, t.did + ":services:crm-mcp", "ServiceIdentity", { service: "Acme CRM MCP server", endpoint: "https://acme-crm.gw.writness.dev/mcp" });
+    const svc = await issueCred(E.keys[t.id], t.did, t.did + ":services:crm-mcp", "ServiceIdentity", { service: "Acme CRM MCP server", endpoint: "https://acme-crm.gw.attestry.dev/mcp" });
     E.creds[t.id].svc = svc;
     const v1 = await verifyObj(ident.keys.registry, r.org.body, r.org.proof), v2 = await verifyObj(E.keys[t.id], svc.body, svc.proof);
     eSet("<h3>Publisher onboarded securely</h3><p class=\"lead\">Acme CRM Inc proves it controls its domain, gets an isolated tenant in its chosen region, its own keys, and a verifiable identity. Its MCP server gets a service identity signed by the company.</p>" +
       "<table class=\"blocks\"><tbody><tr><td>Tenant</td><td><code>" + t.id + "</code></td></tr><tr><td>Region cell</td><td>" + t.cell + "</td></tr><tr><td>Data partition</td><td><code>" + esc(t.partition) + "</code></td></tr><tr><td>Tenant key</td><td><code>" + r.kid + "</code></td></tr><tr><td>Domain proof</td><td><code>" + esc(r.challenge) + "</code></td></tr></tbody></table>" +
-      "<h4>Trust chain</h4><ul class=\"chainv\">" + chainLine(true, "Writness registry (root of trust for this demo)") + chainLine(v1, "Acme CRM Inc: organisation identity signed by the registry") + chainLine(v2, "Acme CRM MCP server: service identity signed by Acme CRM Inc") + "</ul>");
+      "<h4>Trust chain</h4><ul class=\"chainv\">" + chainLine(true, "Attestry registry (root of trust for this demo)") + chainLine(v1, "Acme CRM Inc: organisation identity signed by the registry") + chainLine(v2, "Acme CRM MCP server: service identity signed by Acme CRM Inc") + "</ul>");
     $("eFor").textContent = "Acme CRM Inc";
     elog("Publisher <strong>Acme CRM Inc</strong> verified its domain and got tenant <code>" + t.id + "</code> in " + t.cell + ".");
   }
@@ -1774,7 +1794,7 @@ footer{padding:0 24px 28px;color:var(--ink-2);font-size:13px;max-width:880px}
     for (const key of ["inv1", "inv2"]){
       const t = TEN[key]; const r = await onboardTenant(t);
       const agentName = key === "inv1" ? "support-ops" : "northwind-sales";
-      const adid = "did:web:id.writness.dev:agents:" + (key === "inv1" ? "acme" : "northwind") + ":" + agentName;
+      const adid = "did:web:id.attestry.dev:agents:" + (key === "inv1" ? "acme" : "northwind") + ":" + agentName;
       E.keys[adid] = await genKey();
       const own = await issueCred(E.keys[t.id], t.did, adid, "AgentOwnership", { owner: t.name, version: "1.0.0" });
       const mgr = await issueCred(E.keys[t.id], t.did, adid, "AgentManager", { manager: "a verified member of " + t.name, disclosure: "role-only" });
@@ -1785,7 +1805,7 @@ footer{padding:0 24px 28px;color:var(--ink-2);font-size:13px;max-width:880px}
     }
     eSet("<h3>Invokers onboarded, agents registered</h3><p class=\"lead\">Each company gets its own isolated tenant (Northwind chose the Canadian region). Each agent gets a DID, its own key, and a chain back to an accountable organisation and manager.</p>" +
       out.map(o => "<div class=\"rule\"><div class=\"rh\"><strong>" + esc(o.t.name) + "</strong><span class=\"side\">tenant " + o.t.id + ", " + o.t.cell + "</span></div><ul class=\"chainv\">" +
-        chainLine(true, "Writness registry") + chainLine(o.ok[0], o.t.name + ": organisation identity") + chainLine(o.ok[1], "Ownership of " + o.agentName) + chainLine(o.ok[2], "Agent Manager assigned (name hidden)") + chainLine(true, o.agentName + ": " + o.adid) + "</ul></div>").join("") +
+        chainLine(true, "Attestry registry") + chainLine(o.ok[0], o.t.name + ": organisation identity") + chainLine(o.ok[1], "Ownership of " + o.agentName) + chainLine(o.ok[2], "Agent Manager assigned (name hidden)") + chainLine(true, o.agentName + ": " + o.adid) + "</ul></div>").join("") +
       "<h4>Tenant isolation</h4><p class=\"hint\">Every record carries its tenant ID, and the database refuses reads across tenants, even from inside the platform's own code.</p>" +
       "<div class=\"actions\"><button type=\"button\" class=\"btn danger\" id=\"bCross\">Acme Ltd tries to read Northwind's records</button><button type=\"button\" class=\"btn\" id=\"bOwn\">Acme Ltd reads its own records</button></div><div id=\"isoOut\"></div>");
     $("bCross").addEventListener("click", () => { try { readAs(TEN.inv1.id, TEN.inv2.id); } catch (e) { $("isoOut").innerHTML = "<div class=\"isonote\">✗ " + esc(e.message) + "</div>"; elog("Cross-tenant read refused by isolation."); } });
@@ -1959,7 +1979,7 @@ footer{padding:0 24px 28px;color:var(--ink-2);font-size:13px;max-width:880px}
   }
 
   async function eLedger(){
-    const members = [{ name: "Acme CRM Inc", key: E.keys[TEN.pub.id] }, { name: "Acme Ltd", key: E.keys[TEN.inv1.id] }, { name: "Writness registry", key: ident.keys.registry }];
+    const members = [{ name: "Acme CRM Inc", key: E.keys[TEN.pub.id] }, { name: "Acme Ltd", key: E.keys[TEN.inv1.id] }, { name: "Attestry registry", key: ident.keys.registry }];
     const hashes = E.calls.map(c => c.receipt.slice(7)).filter(Boolean);
     const half = Math.ceil(hashes.length / 2);
     const batches = [hashes.slice(0, half), hashes.slice(half)].filter(b => b.length);
@@ -1992,8 +2012,8 @@ footer{padding:0 24px 28px;color:var(--ink-2);font-size:13px;max-width:880px}
       "<table class=\"blocks\"><thead><tr><th>Capability</th><th>Allowed calls</th><th>Rate</th><th>Tokens</th></tr></thead><tbody>" + lines.map(l => "<tr><td><code>" + l.t + "</code></td><td>" + l.n + "</td><td>" + l.rate + " TKN</td><td>" + tok(l.total) + "</td></tr>").join("") +
       "<tr><td><strong>Total</strong></td><td></td><td></td><td><strong>" + tok(gross) + "</strong></td></tr></tbody></table>" +
       "<h4>Token ledger entries</h4><table class=\"blocks\"><thead><tr><th>Account</th><th>Debit</th><th>Credit</th></tr></thead><tbody>" +
-      "<tr><td>Acme Ltd agent wallet</td><td>" + tok(gross) + "</td><td></td></tr><tr><td>Acme CRM Inc</td><td></td><td>" + (gross - take).toFixed(1) + " TKN</td></tr><tr><td>Writness (10% take)</td><td></td><td>" + take.toFixed(1) + " TKN</td></tr></tbody></table>" +
-      "<div class=\"kpis\"><div class=\"kpi\"><b>" + tok(E.wallets[TEN.inv1.id]) + "</b><span>Acme Ltd left</span></div><div class=\"kpi\"><b>" + (E.wallets[TEN.pub.id]).toFixed(1) + " TKN</b><span>Acme CRM earned</span></div><div class=\"kpi\"><b>" + E.wallets.platform.toFixed(1) + " TKN</b><span>Writness take</span></div><div class=\"kpi\"><b>0 TKN</b><span>Charged for blocked calls</span></div></div>" +
+      "<tr><td>Acme Ltd agent wallet</td><td>" + tok(gross) + "</td><td></td></tr><tr><td>Acme CRM Inc</td><td></td><td>" + (gross - take).toFixed(1) + " TKN</td></tr><tr><td>Attestry (10% take)</td><td></td><td>" + take.toFixed(1) + " TKN</td></tr></tbody></table>" +
+      "<div class=\"kpis\"><div class=\"kpi\"><b>" + tok(E.wallets[TEN.inv1.id]) + "</b><span>Acme Ltd left</span></div><div class=\"kpi\"><b>" + (E.wallets[TEN.pub.id]).toFixed(1) + " TKN</b><span>Acme CRM earned</span></div><div class=\"kpi\"><b>" + E.wallets.platform.toFixed(1) + " TKN</b><span>Attestry take</span></div><div class=\"kpi\"><b>0 TKN</b><span>Charged for blocked calls</span></div></div>" +
       "<p class=\"hint\">Blocked calls cost nothing. Plans, invoices and the revenue calculator are in the Consent, rules and money view.</p>");
     elog("Settled " + tok(gross) + " from receipts: " + (gross - take).toFixed(1) + " TKN to Acme CRM, " + take.toFixed(1) + " TKN platform take.");
   }
@@ -2022,10 +2042,10 @@ footer{padding:0 24px 28px;color:var(--ink-2);font-size:13px;max-width:880px}
   // ---------- Metrics and KPI engine ----------
   function rng(seed){ return function(){ seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
   const PUBS = [
-    { name: "Acme CRM Inc", cat: "CRM", caps: [["search_contacts", 2], ["update_contact", 5], ["export_contacts", 50], ["delete_contact", 10]], w: 0.38 },
-    { name: "Globex Docs", cat: "Docs", caps: [["search_docs", 1], ["summarise_doc", 8]], w: 0.27 },
-    { name: "Initech Pay", cat: "Payments", caps: [["quote_fx", 3], ["create_payout", 25]], w: 0.15 },
-    { name: "Telco Assure", cat: "Identity", caps: [["number_verify", 4], ["sim_swap_check", 4]], w: 0.20 }
+    { name: "Acme CRM Inc", cert: "Certified", cat: "CRM", caps: [["search_contacts", 2], ["update_contact", 5], ["export_contacts", 50], ["delete_contact", 10]], w: 0.38 },
+    { name: "Globex Docs", cert: "Tested", cat: "Docs", caps: [["search_docs", 1], ["summarise_doc", 8]], w: 0.27 },
+    { name: "Initech Pay", cert: "Verified", cat: "Payments", caps: [["quote_fx", 3], ["create_payout", 25]], w: 0.15 },
+    { name: "Telco Assure", cert: "Certified", cat: "Identity", caps: [["number_verify", 4], ["sim_swap_check", 4]], w: 0.20 }
   ];
   const INVS = [
     { name: "Acme Ltd", agents: ["support-ops", "finance-bot"], verified: 0.97, w: 0.35 },
@@ -2047,7 +2067,7 @@ footer{padding:0 24px 28px;color:var(--ink-2);font-size:13px;max-width:880px}
         for (const [rs, p] of REASONS){ acc += p * (verified ? 1 : 2.2); if (x < acc){ outcome = "DENY"; reason = rs; break; } }
         if (outcome === "ALLOW" && r() < 0.025){ outcome = "HOLD"; reason = "approval"; }
         const lat = Math.round(60 + r() * 120 + (r() < 0.02 ? 250 : 0));
-        rows.push({ day, publisher: pb.name, category: pb.cat, invoker: iv.name, agent: iv.agents[Math.floor(r() * iv.agents.length)], capability: cap[0], verified, outcome, reason, latency: lat, tokens: outcome === "ALLOW" ? cap[1] : 0 });
+        rows.push({ day, publisher: pb.name, category: pb.cat, invoker: iv.name, agent: iv.agents[Math.floor(r() * iv.agents.length)], capability: cap[0], verified, outcome, reason, latency: lat, tokens: outcome === "ALLOW" ? cap[1] : 0, certified: pb.cert !== "Verified", disputed: outcome === "ALLOW" && r() < 0.004 });
       }
     }
     return rows;
@@ -2103,7 +2123,8 @@ footer{padding:0 24px 28px;color:var(--ink-2);font-size:13px;max-width:880px}
       "<div class=\"kpis\">" + kpi(rows.length.toLocaleString("en-US"), "Calls") + kpi(Math.round(allowed.length / n * 100) + "%", "Allowed") + kpi(Math.round(denied.length / n * 100) + "%", "Blocked") + kpi(held.length, "Held for approval") +
         kpi(p95 + " ms", "p95 latency") + kpi(agents, "Active agents") + kpi(verifiedShare + "%", "Verified agents") + kpi(tokens.toLocaleString("en-US") + " TKN", tokenLabel) +
         (scope === "platform" ? kpi(Math.round(tokens * 0.10).toLocaleString("en-US") + " TKN", "Platform take (10%)") : "") +
-        kpi(denied.filter(r => r.reason === "identity_unverified").length, "Identity failures") + kpi(denied.filter(r => r.reason === "consent_revoked").length, "Consent revocations hit") + "</div>" +
+        kpi(denied.filter(r => r.reason === "identity_unverified").length, "Identity failures") + kpi(denied.filter(r => r.reason === "consent_revoked").length, "Consent revocations hit") +
+        kpi(Math.round(rows.filter(r => r.certified).length / n * 100) + "%", "Traffic to certified providers") + kpi((rows.filter(r => r.disputed).length / Math.max(1, allowed.length) * 100).toFixed(2) + "%", "Dispute rate") + "</div>" +
       "<h4>Calls per day</h4>" + bars +
       "<h4>By " + esc($("kGrp").selectedOptions[0].textContent.toLowerCase()) + "</h4><div class=\"attrs-wrap\"><table class=\"blocks\"><thead><tr><th>" + esc($("kGrp").selectedOptions[0].textContent) + "</th><th>Calls</th><th>Allowed</th><th>Verified</th><th>p95</th><th>Tokens</th></tr></thead><tbody>" +
         gRows.map(g => "<tr><td>" + esc(g.k) + "</td><td>" + g.calls.toLocaleString("en-US") + "</td><td>" + g.allow + "%</td><td>" + g.verified + "%</td><td>" + g.p95 + " ms</td><td>" + g.tokens.toLocaleString("en-US") + " TKN</td></tr>").join("") + "</tbody></table></div>" +
@@ -2111,10 +2132,247 @@ footer{padding:0 24px 28px;color:var(--ink-2);font-size:13px;max-width:880px}
   }
   drawFilters();
 
+
+  // ---------- Marketplace view ----------
+  const PROVIDERS = [
+    { id: "refundpro", name: "RefundPro", org: "Acme Payments", region: "CA", cert: "Certified", certRank: 3, rate: 3, p95: 220, success: 99.6, rating: 4.8, reviews: 214, promoted: false, up: true },
+    { id: "quickrefunds", name: "QuickRefunds", org: "Quick Co", region: "US", cert: "Tested", certRank: 2, rate: 1.5, p95: 140, success: 98.9, rating: 4.5, reviews: 96, promoted: true, up: true },
+    { id: "initech", name: "Initech Refunds", org: "Initech Pay", region: "CA", cert: "Tested", certRank: 2, rate: 2, p95: 380, success: 99.1, rating: 4.3, reviews: 58, promoted: false, up: true },
+    { id: "northpay", name: "NorthPay Returns", org: "NorthPay", region: "CA", cert: "Verified", certRank: 1, rate: 1.2, p95: 300, success: 97.4, rating: 4.1, reviews: 31, promoted: false, up: true },
+    { id: "cheapref", name: "CheapRefund", org: "Unknown Labs", region: "CA", cert: "Unverified", certRank: 0, rate: 0.5, p95: 260, success: 94.0, rating: 3.2, reviews: 7, promoted: true, up: true }
+  ];
+  const PROFILES = { balanced: { price: 0.25, latency: 0.25, reliability: 0.25, trust: 0.25 }, cheapest: { price: 0.6, latency: 0.1, reliability: 0.2, trust: 0.1 }, fastest: { price: 0.1, latency: 0.6, reliability: 0.2, trust: 0.1 }, trusted: { price: 0.1, latency: 0.1, reliability: 0.3, trust: 0.5 } };
+  const PROFILE_NAMES = { balanced: "Balanced", cheapest: "Cheapest", fastest: "Fastest", trusted: "Most trusted" };
+  const mSteps = [
+    { id: "browse", title: "Browse the marketplace", hint: "Badges, verified reviews, labelled promotions" },
+    { id: "intent", title: "State an intent", hint: "Say what's needed, not which tool" },
+    { id: "route", title: "See the routing decision", hint: "Eligibility first, then ranking, with failover" },
+    { id: "limits", title: "Hit limits and overage", hint: "Throttling and overage policies" },
+    { id: "certify", title: "Earn a certification", hint: "Automated tests issue a credential" },
+    { id: "bounty", title: "Run a bounty", hint: "Escrow, finding, automatic payout" },
+    { id: "cashout", title: "Wallets and cash-out", hint: "Tokens to a bank account via a partner" },
+    { id: "dispute", title: "Resolve disputes from evidence", hint: "Receipts decide" }
+  ];
+  const MK = { done: new Set(), busy: false, intent: null, profile: "balanced", lastRoute: null, wallets: { "Acme Ltd": 5000, "RefundPro (Acme Payments)": 0, "QuickRefunds (Quick Co)": 0, "Researcher: Ana Silva": 0, "Escrow": 0, "Platform": 0 }, keys: {} };
+  function renderMSteps(){
+    $("mSteps").innerHTML = mSteps.map((x, i) => {
+      const enabled = !MK.busy && (i === 0 || MK.done.has(mSteps[i - 1].id));
+      const done = MK.done.has(x.id);
+      return "<li class=\"pstep" + (done ? " done" : "") + "\"><span class=\"num\">" + (done ? "✓" : (i + 1)) + "</span><span>" + esc(x.title) + "<small>" + esc(x.hint) + "</small></span>" +
+        "<button type=\"button\" class=\"btn" + (enabled && !done ? " primary" : "") + "\" data-mstep=\"" + x.id + "\"" + (enabled ? "" : " disabled") + ">" + (done ? "Again" : "Run") + "</button></li>";
+    }).join("");
+  }
+  function mlog(html){ const box = $("mLog"); if (box.querySelector(".empty")) box.innerHTML = ""; const p = document.createElement("p"); p.innerHTML = html; box.appendChild(p); box.scrollTop = box.scrollHeight; }
+  const mSet = (html) => { $("mPanel").innerHTML = html; };
+  const certChip = (c) => "<span class=\"chip " + (c === "Certified" ? "allow" : c === "Tested" ? "allow" : c === "Verified" ? "" : "hold") + "\">" + esc(c) + "</span>";
+  async function mKeys(){ await ensureKeys(); for (const k of ["market", "researcher", "certifier"]) MK.keys[k] = MK.keys[k] || await genKey(); }
+
+  async function mBrowse(){
+    await mKeys();
+    const draw = () => {
+      const region = $("fRegion") ? $("fRegion").value : "All", min = $("fCert") ? +$("fCert").value : 0, sort = $("fSort") ? $("fSort").value : "relevance";
+      let rows = PROVIDERS.filter(p => (region === "All" || p.region === region) && p.certRank >= min);
+      if (sort === "rating") rows = rows.slice().sort((a, b) => b.rating - a.rating);
+      if (sort === "price") rows = rows.slice().sort((a, b) => a.rate - b.rate);
+      $("mList").innerHTML = rows.map(p => "<div class=\"listing\"><div class=\"lh\"><strong>" + esc(p.name) + "</strong>" + certChip(p.cert) + (p.promoted ? " <span class=\"chip hold\">Promoted</span>" : "") + "</div>" +
+        "<div class=\"meta\"><span>by " + esc(p.org) + "</span><span>Region " + p.region + "</span><span>" + p.rate + " TKN per refund</span><span>p95 " + p.p95 + " ms</span><span>" + p.success + "% success</span><span>★ " + p.rating + " from " + p.reviews + " verified reviews</span></div></div>").join("") || "<p class=\"msg\">No listings match.</p>";
+    };
+    const review = { listing: "refundpro", rating: 5, text: "Refunds land in seconds; clear errors.", receipt: "rcp_" + Math.random().toString(36).slice(2, 10) };
+    const sig = await signObj(MK.keys.market, review);
+    const ok = await verifyObj(MK.keys.market, review, sig);
+    mSet("<h3>Marketplace: capability \"money.refund\"</h3><p class=\"lead\">Every listing shows its certification level, real performance from receipts, and reviews only from verified customers who actually used it. Promotions are always labelled.</p>" +
+      "<div class=\"filters\" style=\"padding:0\"><label>Region<select id=\"fRegion\"><option>All</option><option>CA</option><option>US</option></select></label>" +
+      "<label>Minimum certification<select id=\"fCert\"><option value=\"0\">Any</option><option value=\"1\">Verified</option><option value=\"2\">Tested</option><option value=\"3\">Certified</option></select></label>" +
+      "<label>Sort by<select id=\"fSort\"><option value=\"relevance\">Relevance</option><option value=\"rating\">Rating</option><option value=\"price\">Price</option></select></label></div>" +
+      "<div id=\"mList\"></div><h4>How a review is proven</h4><ul class=\"chainv\">" + chainLine(ok, "Review signed and linked to a real call (receipt " + review.receipt + ")") + chainLine(true, "Reviewer is a verified organisation with an active agreement") + "</ul>");
+    ["fRegion", "fCert", "fSort"].forEach(id => $(id).addEventListener("change", draw));
+    draw();
+    $("mFor").textContent = "5 refund providers";
+    mlog("Browsed 5 refund providers; reviews are accepted only with a receipt proving real use.");
+  }
+
+  function parseIntent(text){
+    const t = text.toLowerCase();
+    const order = (t.match(/order\s*#?(\d+)/) || [])[1] || null;
+    const amount = +((t.match(/(\d+)\s*(tkn|tokens)/) || [])[1] || 0);
+    const region = /canada|\bca\b/.test(t) ? "CA" : /\bus\b|united states/.test(t) ? "US" : null;
+    const isRefund = /refund/.test(t);
+    return { intent: isRefund ? "money.refund" : "unknown", params: { order, amount: amount ? amount + " TKN" : null }, constraints: { maxCost: "5 TKN", maxLatencyMs: 800, region, minCertification: "Verified" }, preferences: { profile: MK.profile }, onBehalfOf: "sam@acme.example", mandate: "mdt_weekly_refunds" };
+  }
+  async function mIntent(){
+    mSet("<h3>State an intent</h3><p class=\"lead\">The agent says what it needs. The platform turns it into a structured intent, checks it against the capability's schema, and asks for confirmation when anything is unclear. An AI model may help with the wording; it never decides who gets the work.</p>" +
+      "<input class=\"intentbox\" id=\"intentText\" value=\"Refund order 4417 for 128 TKN, customer is in Canada\">" +
+      "<div class=\"actions\"><button type=\"button\" class=\"btn primary\" id=\"bParse\">Turn into a structured intent</button></div><div id=\"intentOut\"></div>");
+    const run = () => {
+      const it = parseIntent($("intentText").value);
+      MK.intent = it;
+      const missing = [!it.params.order && "order number", !it.params.amount && "amount", !it.constraints.region && "region", it.intent === "unknown" && "what to do"].filter(Boolean);
+      $("intentOut").innerHTML = "<div class=\"call\">" + esc(JSON.stringify(it, null, 2)) + "</div>" +
+        (missing.length ? "<div class=\"isonote\">Needs confirmation: missing " + esc(missing.join(", ")) + ". The agent is asked before anything runs.</div>" : "<ul class=\"chainv\">" + chainLine(true, "Matches capability money.refund (schema v2)") + chainLine(true, "Within Sam's mandate: refunds up to 200 TKN") + chainLine(true, "No tool or provider named: routing will choose") + "</ul>");
+    };
+    $("bParse").addEventListener("click", run);
+    run();
+    mlog("Intent captured: <code>money.refund</code> for order 4417, 128 TKN, in Canada.");
+  }
+
+  function scoreAll(profile, failed){
+    const w = PROFILES[profile];
+    const it = MK.intent || parseIntent("Refund order 4417 for 128 TKN, customer is in Canada");
+    const out = PROVIDERS.map(p => {
+      const reasons = [];
+      if (!p.up || (failed && failed.includes(p.id))) reasons.push("unavailable (circuit open)");
+      if (it.constraints.region && p.region !== it.constraints.region) reasons.push("outside region " + it.constraints.region);
+      if (p.certRank < 1) reasons.push("below minimum certification");
+      if (p.rate > 5) reasons.push("over the cost cap");
+      return { p, eligible: !reasons.length, reasons };
+    });
+    const el = out.filter(x => x.eligible);
+    const maxRate = Math.max(...el.map(x => x.p.rate), 1), maxP95 = Math.max(...el.map(x => x.p.p95), 1);
+    el.forEach(x => {
+      const price = 1 - x.p.rate / maxRate * 0.9, latency = 1 - x.p.p95 / maxP95 * 0.9, rel = (x.p.success - 90) / 10, trust = x.p.certRank / 3;
+      x.parts = { price, latency, rel, trust };
+      x.score = w.price * price + w.latency * latency + w.reliability * rel + w.trust * trust + (x.p.promoted && profile === "balanced" ? 0.02 : 0);
+    });
+    el.sort((a, b) => b.score - a.score);
+    return { out, el, it };
+  }
+  async function mRoute(){
+    let failed = [];
+    const draw = async () => {
+      const { out, el, it } = scoreAll(MK.profile, failed);
+      const win = el[0];
+      MK.lastRoute = { winner: win ? win.p : null, fallback: el[1] ? el[1].p : null };
+      if (win){
+        await writeReceipt({ tool: "fulfil_intent", args: { intent: it.intent, order: it.params.order } },
+          { cls: "money.refund", outcome: "ALLOW", code: null, layers: [{ name: "Routing", verdict: "ALLOW", policies: ["profile:" + MK.profile], reason: "Eligible: " + el.map(x => x.p.id).join(", ") + ". Winner " + win.p.id + " (score " + win.score.toFixed(2) + ")." }], obls: [] },
+          { agentObj: { id: "did:web:id.attestry.dev:agents:acme:support-ops" }, onBehalf: { principal: "sam@acme.example" }, gateway: { intent: it.intent, routing: { profile: MK.profile, eligible: el.map(x => x.p.id), excluded: out.filter(x => !x.eligible).map(x => x.p.id + ": " + x.reasons.join("; ")), winner: win.p.id, failedOver: failed } } });
+      }
+      mSet("<h3>Routing: eligibility first, then ranking</h3><p class=\"lead\">Rules remove ineligible providers before any scoring, so nobody pays their way past a rule. Then eligible providers are ranked by the invoker's preference profile. The full decision is recorded in the receipt.</p>" +
+        "<div class=\"profiles\">" + Object.keys(PROFILES).map(k => "<button type=\"button\" class=\"btn\" data-prof=\"" + k + "\" aria-pressed=\"" + (k === MK.profile) + "\">" + PROFILE_NAMES[k] + "</button>").join("") + "</div>" +
+        "<table class=\"blocks\"><thead><tr><th>Provider</th><th>Eligible?</th><th>Score</th></tr></thead><tbody>" +
+        out.map(x => { const sc = el.find(e => e.p.id === x.p.id); return "<tr><td>" + esc(x.p.name) + " " + certChip(x.p.cert) + (x.p.promoted ? " <span class=\"chip hold\">Promoted</span>" : "") + "</td><td>" + (x.eligible ? "<span class=\"ok\">✓ eligible</span>" : "<span class=\"bad\">✗ " + esc(x.reasons.join("; ")) + "</span>") + "</td><td>" + (sc ? sc.score.toFixed(2) + (sc === win ? " <strong>winner</strong>" : "") : "-") + "</td></tr>"; }).join("") +
+        "</tbody></table>" +
+        (win ? "<p class=\"msg\">Routed to <strong>" + esc(win.p.name) + "</strong> with profile <strong>" + PROFILE_NAMES[MK.profile] + "</strong>" + (el[1] ? "; fallback: " + esc(el[1].p.name) : "") + ". QuickRefunds is promoted but excluded: promotion never overrides the region rule.</p>" : "<p class=\"msg\">No eligible provider: the agent is told why.</p>") +
+        "<div class=\"actions\"><button type=\"button\" class=\"btn danger\" id=\"bFail\">Make the winner fail</button><button type=\"button\" class=\"btn\" id=\"bHeal\">Restore all</button></div>");
+      document.querySelectorAll("[data-prof]").forEach(b => b.addEventListener("click", async () => { MK.profile = b.dataset.prof; await draw(); mlog("Switched to the <strong>" + PROFILE_NAMES[MK.profile] + "</strong> profile; winner: " + esc(MK.lastRoute.winner ? MK.lastRoute.winner.name : "none") + "."); }));
+      $("bFail").addEventListener("click", async () => { if (MK.lastRoute.winner){ failed.push(MK.lastRoute.winner.id); mlog(esc(MK.lastRoute.winner.name) + " started failing; its circuit opened and traffic failed over."); await draw(); } });
+      $("bHeal").addEventListener("click", async () => { failed = []; await draw(); });
+    };
+    await draw();
+    mlog("Routed the refund intent. Try the profiles and the failure button.");
+  }
+
+  async function mLimits(){
+    const cap = 10, refillPerSec = 2; let tokens = cap; const res = [];
+    for (let i = 0; i < 24; i++){ const t = i * 0.25; tokens = Math.min(cap, tokens + (i ? 0.25 * refillPerSec : 0)); if (tokens >= 1){ tokens -= 1; res.push({ i, ok: true }); } else { res.push({ i, ok: false, retry: Math.ceil((1 - tokens) / refillPerSec * 1000) }); } }
+    const ok = res.filter(r => r.ok).length, no = res.length - ok;
+    const policies = {
+      hard_stop: "Monthly quota reached: calls are refused with quota_exhausted until the next period.",
+      allow_and_bill: "Monthly quota reached: calls continue and each is billed at the overage rate (0.4 TKN), shown on the next statement.",
+      soft_cap: "80% and 100% alerts sent to Acme's billing admin; calls continue at the plan rate for a 10% grace.",
+      auto_upgrade: "Pre-approved: Acme moved to the next plan automatically; the change is in the audit log.",
+      pause_on_empty_wallet: "Prepaid tokens ran out: calls pause with insufficient_funds; a 24-hour grace allows a top-up."
+    };
+    mSet("<h3>Limits, throttling and overage</h3><p class=\"lead\">A burst of 24 calls in 6 seconds against a limit of 10 at once, refilling at 2 a second (token bucket). Calls over the limit get a clear answer with a retry time, so agents back off instead of hammering.</p>" +
+      "<div class=\"kpis\"><div class=\"kpi\"><b>" + ok + "</b><span>Served</span></div><div class=\"kpi\"><b>" + no + "</b><span>Throttled (429)</span></div><div class=\"kpi\"><b>" + (res.find(r => !r.ok) || { retry: 0 }).retry + " ms</b><span>First Retry-After</span></div></div>" +
+      "<div class=\"call\">HTTP/1.1 429 Too Many Requests\nRetry-After: 1\nX-RateLimit-Limit: 10\nX-RateLimit-Remaining: 0\n{ \"type\": \"…/rate-limited\", \"reason_code\": \"rate_limited\", \"detail\": \"10 calls at once on the Builder plan; retry in 1 s\" }</div>" +
+      "<h4>When the monthly quota runs out: the agreement's overage policy decides</h4><div class=\"filters\" style=\"padding:0\"><label>Overage policy<select id=\"ovPol\"><option value=\"hard_stop\">Hard stop</option><option value=\"allow_and_bill\">Allow and bill overage</option><option value=\"soft_cap\">Soft cap with alerts</option><option value=\"auto_upgrade\">Auto-upgrade (pre-approved)</option><option value=\"pause_on_empty_wallet\">Pause when wallet is empty</option></select></label></div><div id=\"ovOut\" class=\"isonote\"></div>" +
+      "<p class=\"hint\">Repeated retries after a clear refusal count towards abuse detection, never towards billing.</p>");
+    const show = () => { $("ovOut").textContent = policies[$("ovPol").value]; };
+    $("ovPol").addEventListener("change", show); show();
+    mlog("Burst throttled with retry times; overage handled by the agreement's policy.");
+  }
+
+  async function mCertify(){
+    await mKeys();
+    const tests = [["MCP conformance (initialize, tools, errors)", true], ["OAuth for MCP (metadata, PKCE, audience binding)", true], ["Security scan (tool descriptions, secrets, SSRF)", true], ["Capability mapping (money.refund schema v2)", true], ["Policy checks (idempotent writes, reason codes)", true]];
+    const cred = await issueCred(MK.keys.certifier, "did:web:id.attestry.dev:certification", "did:web:quickco.example:services:quickrefunds", "Certification", { level: "Tested", scope: "quickrefunds@2.3.0", suites: tests.length, expires: "on next version" });
+    const ok = await verifyObj(MK.keys.certifier, cred.body, cred.proof);
+    const qr = PROVIDERS.find(p => p.id === "northpay"); qr.cert = "Tested"; qr.certRank = 2;
+    mSet("<h3>Certification: NorthPay Returns earns \"Tested\"</h3><p class=\"lead\">On every new version, automated suites run. Passing them issues a signed certification credential that appears as a badge, can be required by invokers' rules, and lifts trust in routing. Higher levels add an independent review and a bounty window.</p>" +
+      "<ul class=\"chainv\">" + tests.map(t => chainLine(t[1], t[0])).join("") + "</ul>" + credHtml("Certification credential", cred) +
+      "<ul class=\"chainv\">" + chainLine(ok, "Signed by the certification service; revocable through a status list") + "</ul>" +
+      "<table class=\"blocks\"><thead><tr><th>Level</th><th>What it proves</th></tr></thead><tbody><tr><td>Verified</td><td>Identity and accountability chain</td></tr><tr><td>Tested</td><td>Automated conformance, security and policy tests for this version</td></tr><tr><td>Certified</td><td>Plus independent review and a bounty window with no open critical issues</td></tr><tr><td>Certified plus</td><td>Plus continuous monitoring of behaviour and disputes</td></tr></tbody></table>" +
+      "<p class=\"hint\">NorthPay now ranks higher under the \"Most trusted\" profile in the routing step.</p>");
+    mlog("NorthPay Returns passed 5 suites and received a signed \"Tested\" credential.");
+  }
+
+  async function mBounty(){
+    await mKeys();
+    const budget = 5000;
+    MK.wallets["RefundPro (Acme Payments)"] += 0;
+    MK.wallets["Escrow"] += budget;
+    const programme = { type: "BountyProgramme", provider: "did:web:acme-payments.example", scope: "refundpro@4.x (sandbox for writes)", rewards: { critical: "3000 TKN", high: "1500 TKN", medium: "500 TKN" }, budget: budget + " TKN", disclosureDays: 90, platformFee: "10%" };
+    const pSig = await signObj(ident.keys.publisher, programme);
+    const finding = { programme: "bnty_refundpro", researcher: "did:web:id.attestry.dev:researchers:ana-silva", title: "Refund amount not re-checked after approval", severityClaimed: "high", evidenceHash: "sha256:" + (await sha256Hex("evidence-pack")).slice(0, 32) };
+    const fSig = await signObj(MK.keys.researcher, finding);
+    const reward = 1500, fee = reward * 0.10;
+    MK.wallets["Escrow"] -= reward; MK.wallets["Researcher: Ana Silva"] += reward - fee; MK.wallets["Platform"] += fee;
+    mSet("<h3>Bounty: RefundPro funds a programme</h3><p class=\"lead\">The provider sets scope, rewards and rules as a smart agreement and places the budget in escrow. Verified researchers test against a sandbox, submit findings privately, and validated findings pay out automatically.</p>" +
+      "<div class=\"call\">" + esc(JSON.stringify(programme, null, 2)) + "</div>" +
+      "<ul class=\"chainv\">" + chainLine(await verifyObj(ident.keys.publisher, programme, pSig), "Programme signed by Acme Payments; " + budget + " TKN placed in escrow") +
+      chainLine(await verifyObj(MK.keys.researcher, finding, fSig), "Finding signed by researcher Ana Silva (verified identity), evidence kept as a hash") +
+      chainLine(true, "Triage: severity agreed as high; duplicate check passed") +
+      chainLine(true, "Paid automatically: " + (reward - fee) + " TKN to Ana, " + fee + " TKN platform fee, from escrow") +
+      chainLine(true, "Fix released as v4.1.2; disclosure scheduled in 90 days") + "</ul>" +
+      "<div class=\"kpis\"><div class=\"kpi\"><b>" + tok(MK.wallets["Escrow"]) + "</b><span>Escrow left</span></div><div class=\"kpi\"><b>" + tok(MK.wallets["Researcher: Ana Silva"]) + "</b><span>Ana's wallet</span></div><div class=\"kpi\"><b>" + tok(MK.wallets["Platform"]) + "</b><span>Platform fee</span></div></div>");
+    mlog("Bounty paid: a high-severity finding earned Ana Silva " + (reward - fee) + " TKN from escrow.");
+  }
+
+  async function mCashout(){
+    MK.wallets["RefundPro (Acme Payments)"] += 4200;
+    const rows = Object.entries(MK.wallets);
+    mSet("<h3>Wallets for every party, with cash-out</h3><p class=\"lead\">Everyone holds tokens in a wallet on the platform's double-entry ledger. Providers, researchers and certifiers can convert earnings to their local currency and withdraw to a bank account through a licensed payout partner. The platform never holds customer money itself.</p>" +
+      "<table class=\"blocks\"><thead><tr><th>Wallet</th><th>Balance</th></tr></thead><tbody>" + rows.map(([k, v]) => "<tr><td>" + esc(k) + "</td><td>" + tok(v) + "</td></tr>").join("") + "</tbody></table>" +
+      "<div class=\"consent\"><p><strong>Ana Silva: withdraw earnings</strong></p><div class=\"filters\" style=\"padding:0\"><label>Amount<input type=\"search\" id=\"coAmt\" value=\"" + Math.floor(MK.wallets["Researcher: Ana Silva"]) + "\"></label><label>Destination<select id=\"coDest\"><option>Bank account in local currency</option><option>Stablecoin wallet (US only, licensed partner)</option></select></label></div>" +
+      "<p class=\"hint\">The partner's conversion rate and fee are shown before you confirm.</p><div class=\"actions\"><button type=\"button\" class=\"btn primary\" id=\"bCash\">Confirm withdrawal</button></div><div id=\"coOut\"></div></div>");
+    $("bCash").addEventListener("click", async () => {
+      const amt = Math.max(0, Math.min(+$("coAmt").value || 0, MK.wallets["Researcher: Ana Silva"]));
+      const steps = [["Identity verified (level 2) by the payout partner", true], ["Anti-money-laundering screening passed", true], ["Journal: debit Ana's wallet " + tok(amt) + ", credit payout clearing", true], ["Partner payout reference po_" + (await sha256Hex("po" + amt)).slice(0, 10), true], ["Funds arrive in 1 to 2 business days in local currency", true]];
+      MK.wallets["Researcher: Ana Silva"] -= amt;
+      $("coOut").innerHTML = "<ul class=\"chainv\">" + steps.map(s => chainLine(s[1], s[0])).join("") + "</ul>";
+      $("bCash").disabled = true;
+      mlog("Ana withdrew " + tok(amt) + " to her bank through the payout partner.");
+    });
+    mlog("Opened wallets for all parties.");
+  }
+
+  async function mDispute(){
+    const cases = [
+      { who: "Acme Ltd vs RefundPro", claim: "Charged 3 TKN for a refund that never happened", receipt: null, outcome: "Refunded automatically: no allowed receipt exists for this charge." },
+      { who: "Acme Ltd vs QuickRefunds", claim: "Charged for a refund Acme says it didn't request", receipt: "rcp_" + Math.random().toString(36).slice(2, 10), outcome: "Rejected: a cross-signed receipt shows Acme's agent requested it under an active agreement and consent." },
+      { who: "RefundPro vs researcher", claim: "Finding severity disputed (high vs medium)", receipt: "evidence hash on file", outcome: "Escrow frozen for the difference; sent to platform review with the evidence." }
+    ];
+    mSet("<h3>Disputes decided by evidence</h3><p class=\"lead\">Either side can open a dispute. Cross-signed receipts and the agreement settle most cases automatically; escrowed funds are frozen until the rest are reviewed.</p>" +
+      cases.map(c => "<div class=\"rule\"><div class=\"rh\"><strong>" + esc(c.who) + "</strong><span class=\"side\">" + esc(c.receipt ? "evidence: " + c.receipt : "no receipt") + "</span></div><p class=\"hint\">" + esc(c.claim) + "</p><p class=\"msg\">" + esc(c.outcome) + "</p></div>").join("") +
+      "<p class=\"hint\">Open disputes and dispute rates feed provider reputation and the \"Certified plus\" level.</p>");
+    mlog("Three disputes: one refunded automatically, one rejected by evidence, one escalated with escrow frozen.");
+  }
+
+  async function runMStep(id){
+    if (MK.busy) return;
+    if (!state.key){ mSet("<p class=\"msg\">Signing isn't available in this browser.</p>"); return; }
+    MK.busy = true; renderMSteps();
+    try {
+      if (id === "browse") await mBrowse();
+      if (id === "intent") await mIntent();
+      if (id === "route") await mRoute();
+      if (id === "limits") await mLimits();
+      if (id === "certify") await mCertify();
+      if (id === "bounty") await mBounty();
+      if (id === "cashout") await mCashout();
+      if (id === "dispute") await mDispute();
+      MK.done.add(id);
+    } finally { MK.busy = false; renderMSteps(); }
+  }
+  $("mSteps").addEventListener("click", (e) => { const b = e.target.closest("button[data-mstep]"); if (b && !b.disabled) runMStep(b.dataset.mstep); });
+  renderMSteps();
+
   const setView = (v) => {
     document.body.dataset.view = v;
     $("vE2e").setAttribute("aria-pressed", String(v === "e2e"));
     $("vKpi").setAttribute("aria-pressed", String(v === "kpi"));
+    $("vMkt").setAttribute("aria-pressed", String(v === "mkt"));
     if (v === "kpi") drawKpis();
     $("vPub").setAttribute("aria-pressed", String(v === "pub"));
     $("vAgent").setAttribute("aria-pressed", String(v === "agent"));
@@ -2129,7 +2387,8 @@ footer{padding:0 24px 28px;color:var(--ink-2);font-size:13px;max-width:880px}
   $("vStudio").addEventListener("click", () => { setView("studio"); history.replaceState(null, "", "#studio"); });
   $("vE2e").addEventListener("click", () => { setView("e2e"); history.replaceState(null, "", "#end-to-end"); });
   $("vKpi").addEventListener("click", () => { setView("kpi"); history.replaceState(null, "", "#metrics"); });
-  const hv = { "#publisher": "pub", "#agents": "agent", "#agent-id": "id", "#ledger": "led", "#studio": "studio", "#metrics": "kpi", "#end-to-end": "e2e" };
+  $("vMkt").addEventListener("click", () => { setView("mkt"); history.replaceState(null, "", "#marketplace"); });
+  const hv = { "#publisher": "pub", "#agents": "agent", "#agent-id": "id", "#ledger": "led", "#studio": "studio", "#metrics": "kpi", "#end-to-end": "e2e", "#marketplace": "mkt" };
   setView(hv[location.hash] || "e2e");
 
   // ---------- wiring ----------

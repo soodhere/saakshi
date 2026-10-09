@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Writness — auth, limits and analytics for MCP servers</title>
-<meta name="description" content="Writness puts a gateway in front of your MCP server: proper OAuth sign-in for agents, API keys, plans and limits, usage analytics, abuse protection and a signed receipt for every call.">
+<title>Attestry — auth, limits and analytics for MCP servers</title>
+<meta name="description" content="Attestry puts a gateway in front of your MCP server: proper OAuth sign-in for agents, API keys, plans and limits, usage analytics, abuse protection and a signed receipt for every call.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
@@ -109,7 +109,7 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px}
 <body>
 <div class="wrap">
   <nav class="top" aria-label="Main">
-    <a class="logo" href="#top">Writness</a>
+    <a class="logo" href="#top">Attestry</a>
     <div class="links">
       <a href="#how">How it works</a>
       <a id="navDemo" href="#">Demo</a>
@@ -120,7 +120,7 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px}
   <header class="hero" id="top">
     <div>
       <h1>Open your MCP server to AI agents, safely.</h1>
-      <p class="lede">Put Writness in front of your MCP server and get proper OAuth sign-in for agents, API keys, plans and limits, usage analytics, abuse protection and a signed receipt for every call. Minutes to set up, no changes to your server.</p>
+      <p class="lede">Put Attestry in front of your MCP server and get proper OAuth sign-in for agents, API keys, plans and limits, usage analytics, abuse protection and a signed receipt for every call. Minutes to set up, no changes to your server.</p>
       <div class="ctas">
         <a class="btn primary" id="heroDemo" href="#">Try the interactive demo</a>
         <a class="btn" href="#partners">Launch your server with us</a>
@@ -152,9 +152,9 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px}
 <section class="block" id="how">
   <div class="wrap">
     <h2>How it works</h2>
-    <p class="sub">No changes to your server. Writness speaks MCP and the standard OAuth flows MCP clients already use.</p>
+    <p class="sub">No changes to your server. Attestry speaks MCP and the standard OAuth flows MCP clients already use.</p>
     <ol class="steps">
-      <li><h3>Connect your server</h3><p>Paste your MCP server URL and get a gateway URL such as <code>acme-crm.gw.writness.dev/mcp</code>. A security scan flags risky tools and applies safe defaults.</p></li>
+      <li><h3>Connect your server</h3><p>Paste your MCP server URL and get a gateway URL such as <code>acme-crm.gw.attestry.dev/mcp</code>. A security scan flags risky tools and applies safe defaults.</p></li>
       <li><h3>Agents sign in properly</h3><p>Clients discover your authorization server, register, ask the user for consent and receive tokens valid for your server only. API keys are there for server-to-server use.</p></li>
       <li><h3>Every call is limited, measured and signed</h3><p>Plans and per-tool scopes are enforced with clear messages agents understand. You see who calls which tools, and every call gets a signed receipt anyone can verify.</p></li>
     </ol>
@@ -186,7 +186,7 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px}
       <div><h3>Independent developers</h3><p>Publish a useful server in minutes, see who uses it, and get ready to charge for it.</p></div>
     </div>
     <h2 style="margin-top:48px">Next: controls for teams running agents</h2>
-    <p class="sub">Coming next on the same platform: rules, human approvals in Slack and signed receipts for teams whose agents take real actions. <a id="agentDemo" href="#">See the preview</a>. And with <a id="idDemo" href="#">Agent ID</a>, every agent gets a verifiable identity linking it to the organisation and the person accountable for it.</p>
+    <p class="sub">Coming next on the same platform: rules, human approvals in Slack and signed receipts for teams whose agents take real actions. <a id="agentDemo" href="#">See the preview</a>. And with <a id="idDemo" href="#">Agent ID</a>, every agent gets a verifiable identity linking it to the organisation and the person accountable for it. Over time, this becomes a trusted marketplace where agents find services by stating what they need, with certified providers, fair routing and settlement in tokens: <a id="mktDemo" href="#">see where this is heading</a>.</p>
   </div>
 </section>
 
@@ -226,7 +226,7 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px}
 
 <footer>
   <div class="wrap">
-    <span>Writness (working name). In private beta.</span>
+    <span>Attestry (working name). In private beta.</span>
     <span><a id="mailLink" href="#">Contact</a></span>
   </div>
 </footer>
@@ -243,6 +243,7 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px}
   ["navDemo","heroDemo"].forEach(id => { const a = $(id); a.href = DEMO_URL; });
   $("agentDemo").href = DEMO_URL + "#agents";
   $("idDemo").href = DEMO_URL + "#agent-id";
+  $("mktDemo").href = DEMO_URL + "#marketplace";
   $("mailLink").href = "mailto:" + CONTACT_EMAIL;
   $("mailLink").textContent = CONTACT_EMAIL;
   $("formnote").textContent = FORM_ENDPOINT
