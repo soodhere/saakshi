@@ -186,7 +186,7 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px}
       <div><h3>Independent developers</h3><p>Publish a useful server in minutes, see who uses it, and get ready to charge for it.</p></div>
     </div>
     <h2 style="margin-top:48px">Next: controls for teams running agents</h2>
-    <p class="sub">Coming next on the same platform: rules, human approvals in Slack and signed receipts for teams whose agents take real actions. <a id="agentDemo" href="#">See the preview</a>.</p>
+    <p class="sub">Coming next on the same platform: rules, human approvals in Slack and signed receipts for teams whose agents take real actions. <a id="agentDemo" href="#">See the preview</a>. And with <a id="idDemo" href="#">Agent ID</a>, every agent gets a verifiable identity linking it to the organisation and the person accountable for it.</p>
   </div>
 </section>
 
@@ -242,6 +242,7 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px}
   const $ = (id) => document.getElementById(id);
   ["navDemo","heroDemo"].forEach(id => { const a = $(id); a.href = DEMO_URL; });
   $("agentDemo").href = DEMO_URL + "#agents";
+  $("idDemo").href = DEMO_URL + "#agent-id";
   $("mailLink").href = "mailto:" + CONTACT_EMAIL;
   $("mailLink").textContent = CONTACT_EMAIL;
   $("formnote").textContent = FORM_ENDPOINT

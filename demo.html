@@ -139,6 +139,14 @@ textarea.rjson{width:100%;min-height:260px;resize:vertical;font-family:var(--mon
 /* view switching */
 body[data-view="pub"] .v-agent{display:none}
 body[data-view="agent"] .v-pub{display:none}
+body[data-view="pub"] .v-id, body[data-view="agent"] .v-id{display:none}
+body[data-view="id"] .v-pub, body[data-view="id"] .v-agent{display:none}
+.cred{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:8px 0;background:var(--paper);font-size:13.5px}
+.cred .ct{display:flex;justify-content:space-between;gap:8px;align-items:baseline;margin-bottom:4px}
+.cred code{font-family:var(--mono);font-size:11.5px;word-break:break-all}
+.chainv{list-style:none;margin:6px 0;padding:0;font-size:14px}
+.chainv li{padding:4px 0;border-bottom:1px solid var(--line-2)}
+.chainv .ok{color:var(--allow)}.chainv .bad{color:var(--deny)}
 .steps-pub{list-style:none;margin:0 0 14px;padding:0;display:flex;flex-direction:column;gap:8px}
 .pstep{display:grid;grid-template-columns:28px 1fr auto;gap:10px;align-items:center;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--surface)}
 .pstep .num{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-size:12.5px;font-weight:600;background:var(--na-bg);color:var(--na)}
@@ -193,6 +201,7 @@ footer{padding:0 24px 28px;color:var(--ink-2);font-size:13px;max-width:880px}
     <div class="seg">
       <button type="button" id="vPub" aria-pressed="true">Publisher</button>
       <button type="button" id="vAgent" aria-pressed="false">Agent team</button>
+      <button type="button" id="vId" aria-pressed="false">Agent ID</button>
     </div>
   </div>
   <div class="mode v-agent" role="group" aria-label="Enforcement mode">
@@ -205,6 +214,7 @@ footer{padding:0 24px 28px;color:var(--ink-2);font-size:13px;max-width:880px}
 </header>
 
 <p class="intro v-pub"><strong>You publish an MCP server.</strong> Walk through the six steps to put Writness in front of it: connect, let agents sign in properly, hand out keys, enforce limits, see who calls what, and verify a signed receipt for every call.</p>
+<p class="intro v-id"><strong>Agent ID: who stands behind an agent.</strong> Register an agent, link it to the organisation that owns it and the person who manages it, prove its identity on every call, build reputation from its receipts, and anchor its history so nobody can rewrite it. Credentials and proofs here are really signed and checked in your browser.</p>
 <p class="intro v-agent"><strong>Coming next: controls for teams running agents.</strong> Pick something for the support-ops agent to do. Every tool call goes through the mediator, which decides, explains its decision, and writes a receipt signed in your browser. Change one character in a receipt and verification fails.</p>
 
 <main>
@@ -217,6 +227,17 @@ footer{padding:0 24px 28px;color:var(--ink-2);font-size:13px;max-width:880px}
   <section class="col v-pub" aria-labelledby="hGw">
     <h2 id="hGw">Gateway <span id="gwFor">acme-crm</span></h2>
     <div class="panel gw" id="gw"><p class="empty">Each step shows what Writness does for your server here.</p></div>
+  </section>
+
+  <section class="col v-id" aria-labelledby="hId">
+    <h2 id="hId">Agent ID <span>support-ops, owned by Acme Ltd</span></h2>
+    <ol class="steps-pub" id="idSteps"></ol>
+    <div class="panel plog" id="idLog" aria-live="polite"><p class="empty">Start with step 1.</p></div>
+  </section>
+
+  <section class="col v-id" aria-labelledby="hIdPanel">
+    <h2 id="hIdPanel">Identity and trust <span id="idFor">did:web</span></h2>
+    <div class="panel gw" id="idPanel"><p class="empty">Credentials, checks and proofs appear here.</p></div>
   </section>
 
   <section class="col v-agent" aria-labelledby="hAgent">
@@ -922,14 +943,228 @@ footer{padding:0 24px 28px;color:var(--ink-2);font-size:13px;max-width:880px}
   $("pubSteps").addEventListener("click", (e) => { const b = e.target.closest("button[data-step]"); if (b && !b.disabled) runPubStep(b.dataset.step); });
   renderPubSteps();
 
+
+  // ---------- Agent ID view ----------
+  const ID = {
+    orgDid: "did:web:acme.example",
+    agentDid: "did:web:id.writness.dev:agents:acme:support-ops",
+    registryDid: "did:web:id.writness.dev"
+  };
+  const idSteps = [
+    { id: "reg", title: "Register the agent", hint: "A DID, keys and a passport page" },
+    { id: "own", title: "Organisation signs ownership", hint: "Acme Ltd vouches for its agent" },
+    { id: "mgr", title: "Assign an Agent Manager", hint: "A named person, hidden by default" },
+    { id: "call", title: "Agent calls a publisher", hint: "The gateway checks the whole chain" },
+    { id: "orphan", title: "Manager leaves the company", hint: "The agent is orphaned, then restored" },
+    { id: "rep", title: "Earn reputation", hint: "A credential built from receipts" },
+    { id: "anchor", title: "Anchor the history", hint: "Merkle root and inclusion proof" }
+  ];
+  const ident = { done: new Set(), busy: false, keys: {}, creds: {}, managerActive: true, managerName: "Sam Patel", root: null, anchored: null };
+
+  async function genKey(){
+    if (state.alg === "Ed25519") return crypto.subtle.generateKey({ name: "Ed25519" }, true, ["sign","verify"]);
+    return crypto.subtle.generateKey({ name: "ECDSA", namedCurve: "P-256" }, true, ["sign","verify"]);
+  }
+  async function signObj(key, obj){ const c = canon(obj); return toB64(await crypto.subtle.sign(signParams(), key.privateKey, enc.encode(c))); }
+  async function verifyObj(key, obj, sig){ try { return await crypto.subtle.verify(signParams(), key.publicKey, fromB64(sig), enc.encode(canon(obj))); } catch (e) { return false; } }
+  async function keyId(key){ const raw = await crypto.subtle.exportKey("spki", key.publicKey); return (await sha256Hex(toB64(raw))).slice(0, 16); }
+
+  async function issueCred(issuerKey, issuer, subject, type, claims){
+    const body = { type, issuer, subject, claims, issuedAt: new Date().toISOString(), expires: new Date(Date.now() + 30 * 864e5).toISOString(), id: ulid("vc") };
+    return { body, proof: await signObj(issuerKey, body) };
+  }
+  const credHtml = (title, c, extra) => "<div class=\"cred\"><div class=\"ct\"><strong>" + esc(title) + "</strong><span class=\"chip allow\">Signed</span></div>" +
+    "<div>Issuer: <code>" + esc(c.body.issuer) + "</code></div><div>Subject: <code>" + esc(c.body.subject) + "</code></div>" +
+    "<div>Claims: <code>" + esc(JSON.stringify(c.body.claims)) + "</code></div>" + (extra || "") +
+    "<div>Signature: <code>" + esc(c.proof.slice(0, 44)) + "…</code></div></div>";
+
+  function renderIdSteps(){
+    $("idSteps").innerHTML = idSteps.map((st, i) => {
+      const enabled = !ident.busy && (i === 0 || ident.done.has(idSteps[i - 1].id));
+      const done = ident.done.has(st.id);
+      return "<li class=\"pstep" + (done ? " done" : "") + "\"><span class=\"num\">" + (done ? "✓" : (i + 1)) + "</span>" +
+        "<span>" + esc(st.title) + "<small>" + esc(st.hint) + "</small></span>" +
+        "<button type=\"button\" class=\"btn" + (enabled && !done ? " primary" : "") + "\" data-idstep=\"" + st.id + "\"" + (enabled ? "" : " disabled") + ">" + (done ? "Again" : "Run") + "</button></li>";
+    }).join("");
+  }
+  function ilog(html){ const box = $("idLog"); if (box.querySelector(".empty")) box.innerHTML = ""; const p = document.createElement("p"); p.innerHTML = html; box.appendChild(p); box.scrollTop = box.scrollHeight; }
+  const idSet = (html) => { $("idPanel").innerHTML = html; };
+
+  async function idReg(){
+    if (!state.key){ idSet("<p class=\"msg\">Signing isn't available in this browser.</p>"); return false; }
+    ident.keys.org = ident.keys.org || await genKey();
+    ident.keys.agent = ident.keys.agent || await genKey();
+    ident.keys.registry = ident.keys.registry || await genKey();
+    const agentKid = await keyId(ident.keys.agent);
+    ident.didDoc = { id: ID.agentDid, verificationMethod: [{ id: ID.agentDid + "#key-1", type: state.alg, keyFingerprint: agentKid }], service: [{ type: "AgentPassport", endpoint: "https://id.writness.dev/agents/acme/support-ops" }] };
+    idSet("<h3>Agent registered</h3><p class=\"lead\">The agent now has a global identifier that anyone can resolve, and its own key generated for it (in production, held in hardware).</p>" +
+      "<p class=\"lead\">Identifier</p><div class=\"urlbox\">" + esc(ID.agentDid) + "</div>" +
+      "<h4>DID document (what anyone resolving it sees)</h4><div class=\"call\">" + esc(JSON.stringify(ident.didDoc, null, 2)) + "</div>" +
+      "<p class=\"msg\">Passport page: name, owner, manager status, assurance level, certifications and reputation, all backed by credentials.</p>");
+    $("idFor").textContent = "support-ops";
+    ilog("Registered <code>support-ops</code> with its own key <code>" + esc(agentKid) + "</code>.");
+  }
+
+  async function idOwn(){
+    ident.creds.org = await issueCred(ident.keys.registry, ID.registryDid, ID.orgDid, "OrganisationIdentity", { legalName: "Acme Ltd", domainVerified: "acme.example", method: "DNS TXT record" });
+    ident.creds.own = await issueCred(ident.keys.org, ID.orgDid, ID.agentDid, "AgentOwnership", { owner: "Acme Ltd", agentVersion: "3.2.0", riskTier: "medium" });
+    idSet("<h3>Ownership established</h3><p class=\"lead\">First the registry confirms who Acme Ltd is; then Acme signs that this agent is theirs. Both are signed credentials anyone can check.</p>" +
+      credHtml("Organisation identity", ident.creds.org) + credHtml("Agent ownership", ident.creds.own));
+    ilog("Acme Ltd verified its domain and signed an ownership credential for the agent.");
+  }
+
+  async function idMgr(){
+    ident.managerActive = true;
+    const ref = "sha256:" + (await sha256Hex("sam.patel@acme.example")).slice(0, 24);
+    ident.creds.mgr = await issueCred(ident.keys.org, ID.orgDid, ID.agentDid, "AgentManager", { manager: "a verified member of Acme Ltd", disclosure: "role-only", managerRef: ref, status: "active" });
+    idSet("<h3>Agent Manager assigned</h3><p class=\"lead\">Acme names who is responsible for the agent day to day. Publishers see that an accountable manager exists; the name stays hidden unless the owner or an auditor needs it.</p>" +
+      credHtml("Agent Manager", ident.creds.mgr, "<div class=\"actions\"><button type=\"button\" class=\"btn\" id=\"bReveal\">Reveal manager (owner or auditor only)</button></div><div id=\"revealOut\"></div>"));
+    $("bReveal").addEventListener("click", async () => {
+      const ok = ("sha256:" + (await sha256Hex("sam.patel@acme.example")).slice(0, 24)) === ref;
+      $("revealOut").innerHTML = "<p class=\"msg\">Disclosed under an audit request: <strong>" + esc(ident.managerName) + "</strong> (sam.patel@acme.example). The hidden reference matches: " + (ok ? "✓" : "✗") + "</p>";
+    });
+    ilog("Assigned an Agent Manager; the credential shows the role, not the name.");
+  }
+
+  async function verifyChain(useStolenKey){
+    const checks = [];
+    checks.push([await verifyObj(ident.keys.registry, ident.creds.org.body, ident.creds.org.proof), "Organisation identity signed by the registry"]);
+    checks.push([await verifyObj(ident.keys.org, ident.creds.own.body, ident.creds.own.proof), "Ownership signed by Acme Ltd"]);
+    const mgrOk = await verifyObj(ident.keys.org, ident.creds.mgr.body, ident.creds.mgr.proof);
+    checks.push([mgrOk && ident.managerActive, ident.managerActive ? "Agent Manager credential valid and active" : "Agent Manager has left: agent is orphaned"]);
+    const req = { tool: "search_contacts", server: "acme-crm", nonce: Math.random().toString(36).slice(2), time: new Date().toISOString(), agent: ID.agentDid };
+    const signer = useStolenKey ? await genKey() : ident.keys.agent;
+    const sig = await signObj(signer, req);
+    checks.push([await verifyObj(ident.keys.agent, req, sig), useStolenKey ? "Request signed by a key that isn't in the agent's DID document" : "Request signature matches the agent's registered key"]);
+    return checks;
+  }
+  const checksHtml = (checks) => "<ul class=\"chainv\">" + checks.map(c => "<li class=\"" + (c[0] ? "ok" : "bad") + "\">" + (c[0] ? "✓ " : "✗ ") + esc(c[1]) + "</li>").join("") + "</ul>";
+
+  async function idCall(){
+    const checks = await verifyChain(false);
+    const ok = checks.every(c => c[0]);
+    await writeReceipt({ tool: "search_contacts", args: { server: "acme-crm", agent: ID.agentDid } },
+      { cls: "data.read", outcome: ok ? "ALLOW" : "DENY", code: ok ? null : "identity_unverified",
+        layers: [{ name: "Agent identity", verdict: ok ? "ALLOW" : "DENY", policies: ["agent-id-chain"], reason: ok ? "Verified chain: registry → Acme Ltd → manager → agent key." : "Chain incomplete." },
+                 { name: "Plan limits", verdict: "ALLOW", policies: ["verified-agent"], reason: "Verified agents: 120 calls a minute." }], obls: [] },
+      { agentObj: { id: ID.agentDid, keyVersion: 1 }, onBehalf: { principal: "acme-ltd (service)" }, gateway: { server: "acme-crm", identity: "verified", credentials: [ident.creds.org.body.id, ident.creds.own.body.id, ident.creds.mgr.body.id] } });
+    idSet("<h3>The gateway checks the whole chain</h3><p class=\"lead\">Before trusting the call, Acme CRM's gateway follows every link back to an accountable organisation.</p>" +
+      checksHtml(checks) + "<p class=\"msg\"><strong>Verified agent.</strong> Its limit is raised from 20 to 120 calls a minute, and it appears by name in the publisher's analytics.</p>" +
+      "<div class=\"actions\"><button type=\"button\" class=\"btn danger\" id=\"bStolen\">Try the same call with a stolen key</button></div><div id=\"stolenOut\"></div>");
+    $("bStolen").addEventListener("click", async () => {
+      const bad = await verifyChain(true);
+      await writeReceipt({ tool: "search_contacts", args: { server: "acme-crm", agent: ID.agentDid, stolen: true } },
+        { cls: "data.read", outcome: "DENY", code: "identity_unverified", layers: [{ name: "Agent identity", verdict: "DENY", policies: ["agent-id-chain"], reason: "Request signature doesn't match the agent's registered key." }], obls: [] },
+        { agentObj: { id: ID.agentDid + " (claimed)" }, onBehalf: { principal: "unknown" }, gateway: { server: "acme-crm", identity: "failed" } });
+      $("stolenOut").innerHTML = checksHtml(bad) + "<p class=\"msg\">Refused. Claiming to be the agent isn't enough; the caller must hold the agent's key. The attempt is receipted and flagged.</p>";
+      ilog("A caller claiming to be <code>support-ops</code> with the wrong key was refused.");
+    });
+    ilog("Gateway verified the full chain; the agent got verified-agent limits.");
+  }
+
+  async function idOrphan(){
+    ident.managerActive = false;
+    const checks = await verifyChain(false);
+    await writeReceipt({ tool: "update_contact", args: { server: "acme-crm", agent: ID.agentDid } },
+      { cls: "data.update", outcome: "DENY", code: "agent_orphaned", layers: [{ name: "Agent identity", verdict: "DENY", policies: ["manager-required-for-writes"], reason: "No active Agent Manager: read-only until reassigned." }], obls: [] },
+      { agentObj: { id: ID.agentDid }, onBehalf: { principal: "acme-ltd (service)" }, gateway: { server: "acme-crm", identity: "orphaned" } });
+    idSet("<h3>The manager has left Acme</h3><p class=\"lead\">Their corporate account was disabled, so the manager credential is no longer active. Nobody is accountable for the agent day to day.</p>" +
+      checksHtml(checks) + "<p class=\"msg\"><strong>Orphaned:</strong> reads still work, but writes like <code>update_contact</code> are refused with <code>agent_orphaned</code>, and Acme's security team gets an alarm.</p>" +
+      "<div class=\"actions\"><button type=\"button\" class=\"btn primary\" id=\"bNewMgr\">Assign a new manager</button></div><div id=\"newMgrOut\"></div>");
+    ilog("Manager left; agent orphaned and limited to reads. Alarm raised to Acme.");
+    await new Promise(res => $("bNewMgr").addEventListener("click", res, { once: true }));
+    ident.managerName = "Priya Rao";
+    const ref = "sha256:" + (await sha256Hex("priya.rao@acme.example")).slice(0, 24);
+    ident.creds.mgr = await issueCred(ident.keys.org, ID.orgDid, ID.agentDid, "AgentManager", { manager: "a verified member of Acme Ltd", disclosure: "role-only", managerRef: ref, status: "active" });
+    ident.managerActive = true;
+    $("bNewMgr").disabled = true;
+    $("newMgrOut").innerHTML = checksHtml(await verifyChain(false)) + "<p class=\"msg\">A new Agent Manager credential was issued. The agent is fully active again.</p>";
+    ilog("New manager assigned; the agent is active again.");
+  }
+
+  async function idRep(){
+    const mine = state.receipts.filter(r => r.obj.agent && String(r.obj.agent.id).startsWith(ID.agentDid));
+    const impersonation = mine.filter(r => r.obj.decision.reason === "identity_unverified").length;
+    const ownerEvents = mine.filter(r => r.obj.decision.reason === "agent_orphaned").length;
+    const ownCalls = mine.filter(r => !["identity_unverified", "agent_orphaned"].includes(r.obj.decision.reason));
+    const violations = ownCalls.filter(r => r.obj.decision.outcome !== "ALLOW").length;
+    const metrics = { window: "this session", ownCallsConsidered: ownCalls.length,
+      cleanShare: ownCalls.length ? Math.round((ownCalls.length - violations) / ownCalls.length * 1000) / 10 + "%" : "n/a",
+      policyViolations: violations, impersonationAttemptsAgainstIt: impersonation, managementGaps: ownerEvents, disputes: 0 };
+    const cred = await issueCred(ident.keys.registry, ID.registryDid, ID.agentDid, "AgentReputation", metrics);
+    idSet("<h3>Reputation from transaction history</h3><p class=\"lead\">The registry summarises the agent's receipts into a short-lived, signed reputation credential. Publishers can use it in their rules, for example higher limits for well-behaved verified agents.</p>" +
+      credHtml("Agent reputation", cred) + "<p class=\"msg\">Built from aggregated receipts only; no publisher's raw traffic is shared with another. Owners can see the inputs and appeal.</p>");
+    ilog("Issued a reputation credential from the agent's own " + ownCalls.length + " calls; impersonation attempts against it don't count against it.");
+  }
+
+  async function merkle(leaves){
+    let level = leaves.slice(); const layers = [level];
+    if (!level.length) return { root: null, layers };
+    while (level.length > 1){
+      const next = [];
+      for (let i = 0; i < level.length; i += 2){ const a = level[i], b = level[i + 1] || level[i]; next.push(await sha256Hex(a + b)); }
+      level = next; layers.push(level);
+    }
+    return { root: level[0], layers };
+  }
+  function proofFor(layers, index){
+    const path = []; let i = index;
+    for (let l = 0; l < layers.length - 1; l++){ const lv = layers[l]; const sib = i % 2 ? i - 1 : i + 1; path.push({ left: i % 2 === 1, hash: lv[sib] !== undefined ? lv[sib] : lv[i] }); i = Math.floor(i / 2); }
+    return path;
+  }
+  async function verifyProof(leaf, path, root){ let h = leaf; for (const p of path) h = await sha256Hex(p.left ? p.hash + h : h + p.hash); return h === root; }
+
+  async function idAnchor(){
+    const leaves = state.receipts.map(r => r.hash.slice(7));
+    const tree = await merkle(leaves);
+    ident.root = tree.root;
+    ident.anchored = { ledger: "public chain (simulated)", tx: "0x" + (await sha256Hex("anchor" + tree.root + Date.now())).slice(0, 40), at: new Date().toISOString() };
+    const idx = state.receipts.length - 1;
+    idSet("<h3>History anchored</h3><p class=\"lead\">All " + leaves.length + " receipts are combined into one Merkle root. Only that root is written to a ledger, never the receipts or any personal data.</p>" +
+      "<p class=\"lead\">Merkle root</p><div class=\"urlbox\">" + esc(tree.root || "none") + "</div>" +
+      "<p class=\"lead\" style=\"margin-top:10px\">Anchor transaction (" + esc(ident.anchored.ledger) + ")</p><div class=\"urlbox\">" + esc(ident.anchored.tx) + "</div>" +
+      "<h4>Prove a receipt is part of the anchored history</h4><p class=\"hint\">Pick a receipt in the chain on the right, then check it. If anyone changed it after anchoring, the proof fails.</p>" +
+      "<div class=\"actions\"><button type=\"button\" class=\"btn primary\" id=\"bProof\">Check the selected receipt</button></div><div id=\"proofOut\"></div>");
+    $("bProof").addEventListener("click", async () => {
+      const i = state.selected >= 0 ? state.selected : idx;
+      const r = state.receipts[i];
+      let leaf;
+      try { const o = JSON.parse(r.text); delete o.sig; leaf = await sha256Hex(canon(o)); } catch (e) { leaf = "invalid"; }
+      const ok = i < tree.layers[0].length && await verifyProof(leaf, proofFor(tree.layers, i), tree.root);
+      $("proofOut").innerHTML = "<ul class=\"chainv\"><li class=\"" + (ok ? "ok" : "bad") + "\">" + (ok ? "✓ Receipt #" + r.obj.seq + " is included in the anchored root" : "✗ Receipt #" + r.obj.seq + " doesn't match the anchored history (changed after anchoring, or newer than the anchor)") + "</li></ul>";
+    });
+    if (idx >= 0){ state.selected = idx; renderChain(); await renderReceipt(); }
+    ilog("Anchored a Merkle root of " + leaves.length + " receipts. Try the inclusion proof, then change the receipt and try again.");
+  }
+
+  async function runIdStep(id){
+    if (ident.busy) return;
+    ident.busy = true; renderIdSteps();
+    try {
+      let ok = true;
+      if (id === "reg") ok = await idReg();
+      if (id === "own") await idOwn();
+      if (id === "mgr") await idMgr();
+      if (id === "call") await idCall();
+      if (id === "orphan") await idOrphan();
+      if (id === "rep") await idRep();
+      if (id === "anchor") await idAnchor();
+      if (ok !== false) ident.done.add(id);
+    } finally { ident.busy = false; renderIdSteps(); }
+  }
+  $("idSteps").addEventListener("click", (e) => { const b = e.target.closest("button[data-idstep]"); if (b && !b.disabled) runIdStep(b.dataset.idstep); });
+  renderIdSteps();
+
   const setView = (v) => {
     document.body.dataset.view = v;
     $("vPub").setAttribute("aria-pressed", String(v === "pub"));
     $("vAgent").setAttribute("aria-pressed", String(v === "agent"));
+    $("vId").setAttribute("aria-pressed", String(v === "id"));
   };
   $("vPub").addEventListener("click", () => { setView("pub"); history.replaceState(null, "", "#publisher"); });
   $("vAgent").addEventListener("click", () => { setView("agent"); history.replaceState(null, "", "#agents"); });
-  setView(location.hash === "#agents" ? "agent" : "pub");
+  $("vId").addEventListener("click", () => { setView("id"); history.replaceState(null, "", "#agent-id"); });
+  setView(location.hash === "#agents" ? "agent" : location.hash === "#agent-id" ? "id" : "pub");
 
   // ---------- wiring ----------
   $("scenarios").innerHTML = scenarios.map(s =>
