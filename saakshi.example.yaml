@@ -1,0 +1,47 @@
+# Saakshi standard manifest (example). Only metadata, endpoints and tools are required.
+apiVersion: saakshi.dev/v1
+kind: ServerManifest
+metadata:
+  name: com.acme-payments/refundpro      # MCP Registry name
+  version: 2.3.1
+  title: RefundPro MCP server
+  publisher: did:web:acme-payments.example
+  category: payments
+  regions: [CA]
+endpoints:
+  production: https://refundpro.acme-payments.example/mcp
+  sandbox: https://sandbox.refundpro.acme-payments.example/mcp
+  transport: streamable-http
+auth:
+  type: oauth2
+  scopes: [orders:read, payments:refund]
+tools:
+  - name: search_orders
+    capability: data.orders.search
+    risk: read
+    dataClasses: [personal]
+  - name: issue_refund
+    capability: money.refund
+    risk: money
+    dataClasses: [personal, payment]
+    idempotent: true
+pricing:
+  model: per-call
+  rates: { search_orders: 0.5 TKN, issue_refund: 3 TKN }
+  plans: [free-100, builder-2900]
+policy:
+  profile: payments-strict             # open-read | standard | personal-data | payments-strict | regulated
+  overrides:
+    - rule: limits.perAgentPerMinute
+      value: 60                        # profile default 20; approved change, recorded in the change trail
+trustCheck:
+  packs: [conformance, auth, security, agent-experience]
+  activeTestsAllowedOn: sandbox
+bounty:
+  enabled: true
+  scope: [issue_refund, search_orders]
+  environment: sandbox
+  rewards: { critical: 1500 TKN, high: 600 TKN, medium: 200 TKN }
+  disclosureDays: 90
+security:
+  contact: security@acme-payments.example

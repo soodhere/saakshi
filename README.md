@@ -1,17 +1,10 @@
-# Attestry site (working name)
+# Saakshi site
 
-- index.html: landing page
-- demo.html: interactive demo (served at /demo), eight views:
-  - /demo or /demo#end-to-end: the whole lifecycle in ten steps (default)
-  - /demo#metrics: metrics and KPIs with tenant scopes, filters and marketplace KPIs
-  - /demo#marketplace: listings, intents, routing, limits, certification, bounties, wallets, disputes
-  - /demo#publisher: publisher gateway flow
-  - /demo#agents: agent-team controls
-  - /demo#agent-id: agent identity and accountability chain
-  - /demo#ledger: smart agreements, token payments, escrow, selective disclosure, consortium ledger
-  - /demo#studio: consent, policy studio, both sides, monetization
+- index.html: landing page (four seats, how it works, roadmap aligned with the product document, trust, early-access form)
+- demo.html (served at /demo): sign in as a provider, invoker, tester or the platform, and follow the ten-chapter story with a shared ledger, receipts, change trail, identity registry and trust centre. Open a seat directly with /demo#provider, /demo#invoker, /demo#tester or /demo#platform.
+- demo-v1.html (served at /demo-v1): earlier feature-by-feature views (policy studio, network signals, routing profiles, selective disclosure, KPIs)
+- saakshi.example.yaml: the standard manifest providers publish and invokers and testers use with Trust Check
 - vercel.json: clean URLs and basic security headers
 
-All prices and payments are in tokens (TKN), simulated. Signatures, hashes and proofs are real and run in the browser.
+Tokens (TKN) and payouts are simulated; signatures, hashes and proofs are real and run in the browser.
 Settings near the bottom of index.html: CONTACT_EMAIL (set) and FORM_ENDPOINT (paste a Formspree endpoint).
-To rename the product, find and replace "Attestry" in index.html and demo.html.
